@@ -12,7 +12,7 @@
 :root{
   --ice:#f1f4f7; --card:#ffffff; --band:#fbfcfd;
   --ink:#15181d; --muted:#616b78; --line:#d9e0e7; --line-soft:#e8edf1;
-  --red:#ce1126; --red-ink:#a60d1e; --win-wash:#fdf2f3;
+  --accent:#ce1126; --accent-text:#ce1126; --accent-ink:#a60d1e; --accent-wash:#fdf2f3; --on-accent:#fff;
   --loss:#78828f;
   --ff-head:"Newsreader",Georgia,"Times New Roman",serif;
   --ff-ui:"Barlow","Helvetica Neue",Arial,sans-serif;
@@ -21,20 +21,37 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ice:#0d1013; --card:#15191e; --band:#171c22;
   --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
-  --red:#ff3047; --red-ink:#ff5d6e; --win-wash:#221316;
+  --accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;
   --loss:#6f7a87; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --ice:#0d1013; --card:#15191e; --band:#171c22;
   --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
-  --red:#ff3047; --red-ink:#ff5d6e; --win-wash:#221316;
+  --accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;
   --loss:#6f7a87; color-scheme:dark;
 }
+/* each tab wears its team's colour; the Red Wings' red is the default above.
+   --accent fills, --accent-text is the same hue dark enough to read as text,
+   --on-accent is the text on a filled pill (dark on orange, teal and gold). */
+:root[data-team="tigers"]{--accent:#fa4616; --accent-text:#c2410c; --accent-ink:#9a3412; --accent-wash:#fef1ea; --on-accent:#15181d;}
+:root[data-team="lions"]{--accent:#0076b6; --accent-text:#0076b6; --accent-ink:#005a8c; --accent-wash:#edf5fb; --on-accent:#fff;}
+:root[data-team="pistons"]{--accent:#00a3ad; --accent-text:#00767e; --accent-ink:#006a72; --accent-wash:#e9f7f8; --on-accent:#0d1013;}
+:root[data-team="cavaliers"]{--accent:#fdbb30; --accent-text:#8f6200; --accent-ink:#7d5600; --accent-wash:#fdf6e3; --on-accent:#15181d;}
+@media (prefers-color-scheme:dark){
+  :root[data-team="tigers"]:not([data-theme="light"]){--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
+  :root[data-team="lions"]:not([data-theme="light"]){--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
+  :root[data-team="pistons"]:not([data-theme="light"]){--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
+  :root[data-team="cavaliers"]:not([data-theme="light"]){--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
+}
+:root[data-team="tigers"][data-theme="dark"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
+:root[data-team="lions"][data-theme="dark"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
+:root[data-team="pistons"][data-theme="dark"]{--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
+:root[data-team="cavaliers"][data-theme="dark"]{--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
 *{box-sizing:border-box}
 body{background:var(--ice);color:var(--ink);font-family:var(--ff-ui);font-size:15px;line-height:1.45;margin:0;padding:0 16px;-webkit-font-smoothing:antialiased}
 .wrap{max-width:860px;margin:0 auto;padding-block:0 64px}
 a{color:inherit;text-decoration:none}
-:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 .lbl{font-family:var(--ff-ui);font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
 .num{font-variant-numeric:tabular-nums}
 
@@ -45,15 +62,15 @@ header.tabs::-webkit-scrollbar{display:none}
 .tabs button{appearance:none;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;cursor:pointer;
   font-family:var(--ff-score);font-weight:700;font-size:clamp(22px,5.4vw,28px);line-height:1;text-transform:uppercase;
   color:var(--muted);padding:6px 0 9px;white-space:nowrap}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
-.tabs button span{font-variant-numeric:tabular-nums;color:var(--red-ink);font-weight:600}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button span{font-variant-numeric:tabular-nums;color:var(--accent-ink);font-weight:600}
 
 .standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
 .rec{display:flex;align-items:baseline;gap:8px}
 .rec b{font-family:var(--ff-score);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
 
 /* up next */
-.next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--red);border-radius:3px;background:var(--card);padding:16px 18px}
+.next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:3px;background:var(--card);padding:16px 18px}
 .next:empty{display:none}
 .next h2{font-family:var(--ff-score);text-transform:uppercase;font-weight:700;font-size:26px;line-height:1.05;margin:7px 0 4px}
 .next h2 i{font-style:normal;color:var(--muted);font-weight:600;font-size:17px}
@@ -69,15 +86,15 @@ header.tabs::-webkit-scrollbar{display:none}
 .when-col{text-align:right;padding:16px 26px 0 0;position:relative}
 .when-col time{display:block;font-family:var(--ff-score);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-variant-numeric:tabular-nums}
 .when-col small{display:block;font-size:10.5px;color:var(--muted);opacity:.85;font-variant-numeric:tabular-nums}
-.row.unread .when-col time{color:var(--red)}
+.row.unread .when-col time{color:var(--accent-text)}
 /* only games sit on the spine; stories hang off it, indented to line up with the gap labels */
-.dot{position:absolute;right:-7px;top:18px;width:13px;height:13px;border-radius:50%;background:var(--red);border:1.5px solid var(--red)}
+.dot{position:absolute;right:-7px;top:18px;width:13px;height:13px;border-radius:50%;background:var(--accent);border:1.5px solid var(--accent)}
 .row.game.pre .dot{background:var(--ice);border-color:var(--muted)}
 .body-col{padding:12px 0 12px 26px;min-width:0}
 
 /* story: unread shows in its date; a read headline steps back */
 .story{display:block;padding:5px 0 13px;border-bottom:1px solid var(--line-soft)}
-.story:hover h3{color:var(--red-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.story:hover h3{color:var(--accent-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
 .story h3{font-family:var(--ff-head);font-weight:500;font-size:19.5px;line-height:1.26;margin:0;text-wrap:balance}
 .story p{font-family:var(--ff-head);font-size:14.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;max-width:62ch}
 .story.read h3{color:var(--muted);font-weight:400}
@@ -87,9 +104,9 @@ header.tabs::-webkit-scrollbar{display:none}
 .row.game .body-col{padding-block:9px}
 .band{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:0 14px;
   background:var(--band);border:1px solid var(--line);border-radius:3px;padding:11px 14px}
-.row.game.win .band{background:var(--win-wash);border-color:var(--red)}
+.row.game.win .band{background:var(--accent-wash);border-color:var(--accent)}
 .gno{font-family:var(--ff-score);font-weight:700;font-size:17px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
-.row.game.win .gno{color:var(--red)}
+.row.game.win .gno{color:var(--accent-text)}
 .matchup{min-width:0}
 .matchup .opp{font-family:var(--ff-score);font-weight:700;font-size:23px;line-height:1.08;text-transform:uppercase}
 .matchup .opp i{font-style:normal;color:var(--muted);font-weight:600;font-size:17px}
@@ -98,7 +115,7 @@ header.tabs::-webkit-scrollbar{display:none}
 .sc{font-family:var(--ff-score);font-weight:700;font-size:28px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sc s{text-decoration:none;color:var(--muted);font-weight:600;padding:0 1px}
 .pill{font-family:var(--ff-ui);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;padding:4px 7px;white-space:nowrap}
-.pill.w{background:var(--red);color:#fff}
+.pill.w{background:var(--accent);color:var(--on-accent)}
 .pill.l{border:1px solid var(--loss);color:var(--loss)}
 .after{text-align:right;min-width:62px}
 .after b{display:block;font-family:var(--ff-score);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
@@ -109,7 +126,7 @@ header.tabs::-webkit-scrollbar{display:none}
 .gap hr{flex:1;height:0;border:0;border-top:1px solid var(--line-soft);min-width:12px}
 .empty{padding:26px 0 0 122px;color:var(--muted);font-family:var(--ff-head);font-style:italic}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:6px 16px;flex-wrap:wrap}
-.linkbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:var(--red-ink);
+.linkbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:var(--accent-ink);
   text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
 .linkbtn[hidden]{display:none}
 
@@ -292,6 +309,7 @@ function unreadIds(){
 
 function render(){
   var T = TEAMS[cur], games = T.games, arts = T.arts;
+  document.documentElement.setAttribute('data-team', T.feed.slug);
   tabs();
 
   // where the team stands: big text, then what it's measured against

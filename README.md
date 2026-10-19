@@ -95,6 +95,15 @@ NFL times not yet set read "Time TBD".
 
 The last tab opened is remembered per browser; `#slug` in the address wins.
 
+**Colours:** each tab wears its team's colour, Kyle's picks (2026-10-18): Tigers
+orange, Lions blue, Pistons teal, Cavaliers gold, Red Wings red. They are CSS
+tokens in `template.html` keyed on `data-team` (the slug), light and dark:
+`--accent` fills (tab underline, game dots, win pills and bands, Up next rule),
+`--accent-text` is the same hue dark enough to read as text (unread dates, win
+game numbers — all at least 4.5:1), `--on-accent` is the text on a win pill
+(dark on orange, teal and gold). A new team needs its own block or it falls
+back to red.
+
 **TV:** a US national broadcast if the game has one (ESPN, ESPN+, TNT, ABC…),
 otherwise the feed's `localTv` (Detroit SportsNet). NHL Network doesn't count
 as national: its games stay on the local channel too. A game the API lists no
