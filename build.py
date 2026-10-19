@@ -1,14 +1,14 @@
 """Build the site: an RSS feed read against the team's schedule.
 
-Two sources, both public and both cheap, so there is no cache here the way
-games-history and soccer-history need one:
+Sources, all public:
 
   * the feed itself (siftrss in front of The Athletic, which does not hand out
     its own RSS any more) -- a few dozen items, always the newest ones;
-  * the NHL's public schedule endpoint, one call per season.
+  * the NHL's public schedule endpoint, one call per season, and its standings;
+  * Hockey-Reference's playoff probabilities, at most twice a day (cache/).
 
-Every run re-asks both and rewrites docs/index.html from template.html. That
-is the whole build; there is nothing slow enough to be worth keeping.
+Every run re-asks the NHL and the feed and rewrites docs/index.html from
+template.html.
 
     python build.py
 """
@@ -82,6 +82,77 @@ def read_feed(url, since):
     return items
 
 
+def read_standing(abbrev):
+    """Where the club stands: division place, and how far it is from the
+    playoff line. A conference sends the top three of each division plus two
+    wild cards, so a team outside is as far back as the NEARER of its
+    division's third place and the conference's second wild card; a team
+    inside is as far clear as it is above the conference's first team out."""
+    table = json.loads(fetch("https://api-web.nhle.com/v1/standings/now"))["standings"]
+    us = next(t for t in table if t["teamAbbrev"]["default"] == abbrev)
+    conf = [t for t in table if t["conferenceName"] == us["conferenceName"]]
+    inside = lambda t: t["divisionSequence"] <= 3 or 0 < t["wildcardSequence"] <= 2
+    if inside(us):
+        first_out = next((t for t in conf if t["wildcardSequence"] == 3), None)
+        gap = us["points"] - first_out["points"] if first_out else None
+    else:
+        third = next(t for t in conf if t["divisionName"] == us["divisionName"] and t["divisionSequence"] == 3)
+        wc2 = next(t for t in conf if t["wildcardSequence"] == 2)
+        gap = min(third["points"], wc2["points"]) - us["points"]
+    return {
+        "place": us["divisionSequence"],
+        "division": us["divisionName"],
+        "inside": inside(us),
+        "gap": gap,
+        "points": us["points"],
+        "name": us["teamName"]["default"],
+    }
+
+
+ODDS_URL = "https://www.hockey-reference.com/friv/playoff_prob.fcgi"
+ODDS_CACHE = HERE / "cache" / "nhl-odds.json"
+
+
+def read_odds(name, points):
+    """Playoff odds from Hockey-Reference, or None when there are none to show.
+
+    MoneyPuck asks not to be scraped, so it stays out (same call as the
+    standings app). Hockey-Reference's robots.txt allows this page and asks
+    for a 3-second crawl delay; the build runs every three hours, so the page
+    is fetched at most every 12 hours and the copy kept in cache/.
+
+    The page only starts a season once every team has played 10 games; until
+    then it still shows last season, with the odds cells blank. So a number
+    counts only if the page's current points for the team match the NHL's.
+    """
+    cached = json.loads(ODDS_CACHE.read_text(encoding="utf-8")) if ODDS_CACHE.exists() else {}
+    age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(cached.get("fetched", "2000-01-01T00:00:00+00:00"))
+    if age > dt.timedelta(hours=12):
+        try:
+            page = fetch(ODDS_URL)
+        except OSError as err:
+            print(f"  odds: Hockey-Reference unreachable ({err}); keeping the cached copy")
+        else:
+            teams = {}
+            # pull name, points and probability out of the same row, so a blank
+            # cell can't shift a value onto the wrong team
+            for row in re.findall(r"<tr[^>]*>(.*?)</tr>", page, re.S):
+                cell = lambda stat: re.search(r'data-stat="%s"[^>]*>(?:<a[^>]*>)?([^<]*)<' % stat, row)
+                team, pts, prob = cell("team_name"), cell("points_current"), cell("prob_playoffs")
+                if team and pts and prob and pts.group(1).strip().isdigit():
+                    teams[html.unescape(team.group(1).strip())] = {
+                        "points": int(pts.group(1)),
+                        "pct": prob.group(1).strip().rstrip("%") or None,
+                    }
+            cached = {"fetched": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "teams": teams}
+            ODDS_CACHE.parent.mkdir(exist_ok=True)
+            ODDS_CACHE.write_text(json.dumps(cached, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    row = cached.get("teams", {}).get(name)
+    if not row or row["points"] != points or row["pct"] is None:
+        return None
+    return float(row["pct"])
+
+
 def pick_tv(broadcasts, local_tv):
     """One network per game, the one Kyle would turn to in Michigan: a US
     national broadcast if there is one, otherwise the club's local channel.
@@ -141,7 +212,11 @@ def main():
     for feed in CONFIG["feeds"]:
         articles = read_feed(feed["feed"], since)
         games = read_schedule(feed["nhl"], season, feed.get("localTv", ""))
-        feeds.append({k: feed[k] for k in ("slug", "short", "source")} | {"articles": articles, "games": games})
+        standing = read_standing(feed["nhl"])
+        standing["odds"] = read_odds(standing["name"], standing["points"])
+        print(f"  {standing}")
+        feeds.append({k: feed[k] for k in ("slug", "short", "source")}
+                     | {"articles": articles, "games": games, "standing": standing})
         played = [g for g in games if g["ds"] is not None and g["type"] == 2]
         print(
             f"{feed['short']}: {len(articles)} stories since {since}, "

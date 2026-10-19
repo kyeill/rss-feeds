@@ -1,0 +1,133 @@
+{
+ "fetched": "2026-10-19T01:57:18+00:00",
+ "teams": {
+  "Anaheim Ducks": {
+   "pct": "100.0",
+   "points": 92
+  },
+  "Boston Bruins": {
+   "pct": "100.0",
+   "points": 100
+  },
+  "Buffalo Sabres": {
+   "pct": "100.0",
+   "points": 109
+  },
+  "Calgary Flames": {
+   "pct": null,
+   "points": 77
+  },
+  "Carolina Hurricanes": {
+   "pct": "100.0",
+   "points": 113
+  },
+  "Chicago Blackhawks": {
+   "pct": null,
+   "points": 72
+  },
+  "Colorado Avalanche": {
+   "pct": "100.0",
+   "points": 121
+  },
+  "Columbus Blue Jackets": {
+   "pct": null,
+   "points": 92
+  },
+  "Dallas Stars": {
+   "pct": "100.0",
+   "points": 112
+  },
+  "Detroit Red Wings": {
+   "pct": null,
+   "points": 92
+  },
+  "Edmonton Oilers": {
+   "pct": "100.0",
+   "points": 93
+  },
+  "Florida Panthers": {
+   "pct": null,
+   "points": 84
+  },
+  "Los Angeles Kings": {
+   "pct": "100.0",
+   "points": 90
+  },
+  "Minnesota Wild": {
+   "pct": "100.0",
+   "points": 104
+  },
+  "Montreal Canadiens": {
+   "pct": "100.0",
+   "points": 106
+  },
+  "Nashville Predators": {
+   "pct": null,
+   "points": 86
+  },
+  "New Jersey Devils": {
+   "pct": null,
+   "points": 87
+  },
+  "New York Islanders": {
+   "pct": null,
+   "points": 91
+  },
+  "New York Rangers": {
+   "pct": null,
+   "points": 77
+  },
+  "Ottawa Senators": {
+   "pct": "100.0",
+   "points": 99
+  },
+  "Philadelphia Flyers": {
+   "pct": "100.0",
+   "points": 98
+  },
+  "Pittsburgh Penguins": {
+   "pct": "100.0",
+   "points": 98
+  },
+  "San Jose Sharks": {
+   "pct": null,
+   "points": 86
+  },
+  "Seattle Kraken": {
+   "pct": null,
+   "points": 79
+  },
+  "St. Louis Blues": {
+   "pct": null,
+   "points": 86
+  },
+  "Tampa Bay Lightning": {
+   "pct": "100.0",
+   "points": 106
+  },
+  "Toronto Maple Leafs": {
+   "pct": null,
+   "points": 78
+  },
+  "Utah Mammoth": {
+   "pct": "100.0",
+   "points": 92
+  },
+  "Vancouver Canucks": {
+   "pct": null,
+   "points": 58
+  },
+  "Vegas Golden Knights": {
+   "pct": "100.0",
+   "points": 95
+  },
+  "Washington Capitals": {
+   "pct": null,
+   "points": 95
+  },
+  "Winnipeg Jets": {
+   "pct": null,
+   "points": 82
+  }
+ }
+}

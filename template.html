@@ -51,10 +51,6 @@ header.tabs::-webkit-scrollbar{display:none}
 .standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
 .rec{display:flex;align-items:baseline;gap:8px}
 .rec b{font-family:var(--ff-score);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
-.form{display:flex;gap:3px;align-items:flex-end}
-.form i{width:14px;height:22px;border-radius:2px;display:block;border:1px solid transparent}
-.form i.w{background:var(--red)}
-.form i.l{background:var(--line);border-color:var(--line)}
 
 /* up next */
 .next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--red);border-radius:3px;background:var(--card);padding:16px 18px}
@@ -141,12 +137,9 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   <header class="tabs" role="tablist" aria-label="Teams" id="tabs"></header>
 
   <div class="standing">
-    <div class="rec"><b id="recNum">&mdash;</b><span class="lbl" id="recNote">record</span></div>
-    <div class="rec"><b id="ptsNum">&mdash;</b><span class="lbl">points</span></div>
-    <div>
-      <div class="form" id="form"></div>
-      <div class="lbl" style="margin-top:5px">last 8 &middot; oldest left</div>
-    </div>
+    <div class="rec"><b id="placeNum">&mdash;</b><span class="lbl" id="placeNote">division</span></div>
+    <div class="rec"><b id="gapNum">&mdash;</b><span class="lbl" id="gapNote">playoff spot</span></div>
+    <div class="rec"><b id="oddsNum">&mdash;</b><span class="lbl" id="oddsNote">playoff odds</span></div>
   </div>
 
   <section class="next" id="next"></section>
@@ -183,6 +176,7 @@ function dayDiff(a,b){ return Math.round((new Date(b.key) - new Date(a.key))/864
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function side(g){ return '<i>'+(g.home ? 'vs' : 'at')+'</i> '; }
+function ordinal(n){ var s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
 
 /* one team: games in order with the running record, and each story tied to the game it follows */
 function prep(feed){
@@ -291,16 +285,22 @@ function unreadIds(){
 }
 
 function render(){
-  var T = TEAMS[cur], games = T.games, played = T.played, arts = T.arts;
+  var T = TEAMS[cur], games = T.games, arts = T.arts;
   tabs();
 
-  var last = played[played.length-1];
-  document.getElementById('recNum').textContent = last ? last.rec : '0-0-0';
-  document.getElementById('recNote').textContent = played.length + ' games played';
-  document.getElementById('ptsNum').textContent = last ? last.pts : 0;
-  document.getElementById('form').innerHTML = played.slice(-8).map(function(g){
-    return '<i class="'+g.cls+'" title="'+esc((g.home?'vs ':'at ')+g.opp+' '+g.ds+'-'+g.os+' '+g.pill)+'"></i>';
-  }).join('');
+  // where the team stands: big text, then what it's measured against
+  var S = T.feed.standing, $ = function(id){ return document.getElementById(id); };
+  $('placeNum').textContent = ordinal(S.place)+' Place';
+  $('placeNote').textContent = S.division+' Division';
+  if(S.gap === null){ $('gapNum').textContent = '—'; $('gapNote').textContent = 'playoff spot'; }
+  else {
+    $('gapNum').textContent = S.gap+' Point'+(S.gap === 1 ? '' : 's')+(S.inside ? ' Clear' : ' Back');
+    $('gapNote').textContent = S.inside ? 'of first team out' : 'of playoff spot';
+  }
+  var o = S.odds;
+  $('oddsNum').textContent = o === null ? '—' : o > 0 && o < 1 ? '<1%' : o > 99 && o < 100 ? '>99%' : Math.round(o)+'%';
+  // Hockey-Reference starts a season's odds once every team has played 10 games
+  $('oddsNote').textContent = o === null ? 'playoff odds · after 10 games' : 'playoff odds';
 
   var g0 = games.filter(function(g){ return !g.done; })[0];
   document.getElementById('next').innerHTML = !g0 ? '' :

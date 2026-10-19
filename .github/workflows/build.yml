@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "rss-feeds bot"
           git config user.email "actions@github.com"
-          git add docs
+          git add docs cache
           if git diff --cached --quiet; then
             echo "nothing new in the feed"
             exit 0

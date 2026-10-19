@@ -33,8 +33,10 @@ every three hours and commits `docs/` when the feed has moved.
 A tab per team across the top — **Red Wings (52)**, the number being unread
 stories; the count disappears at zero. Kyle plans a couple more teams in the
 same format. The selected tab is the `#slug` in the
-address, so a tab can be bookmarked. Under it: record, points, the last-eight
-strip, the next game (opponent, time, arena, one TV network), then the timeline,
+address, so a tab can be bookmarked. Under it, three figures in big text with
+a small label: division place ("7th Place" / Atlantic Division), distance from
+the playoff line ("2 Points Back" / of playoff spot, or "N Points Clear" / of
+first team out), and playoff odds. Then the next game (opponent, time, arena, one TV network), then the timeline,
 newest first. There are no filters: every story and every game, preseason
 included.
 
@@ -50,6 +52,20 @@ Every story sits under the last finished game before it was filed (a line
 saying how long after was removed at Kyle's request, 2026-10-18). Gap labels between games count the stories filed in each break. Games carry the
 record as it stood after them, so the standings move down the page with the
 stories. Preseason games show as `PS` and change no record.
+
+**Playoff line:** each conference sends the top three of each division plus
+two wild cards. A team outside is as far back as the NEARER of its division's
+third place and the second wild card; a team inside is as far clear as it is
+above the conference's first team out. From the NHL's `standings/now`.
+
+**Playoff odds** come from Hockey-Reference's playoff probabilities page
+(`/friv/playoff_prob.fcgi`; the old `.cgi` address redirects). MoneyPuck asks
+not to be scraped, so it stays out. The page is fetched at most every 12 hours
+and kept in `cache/nhl-odds.json`, which CI commits. Hockey-Reference only
+starts a season once every team has played 10 games; until then it still shows
+last season with blank odds, so a value is used only when the page's points
+for the team match the NHL's. Until then the page shows "—" and "after 10
+games".
 
 **TV:** a US national broadcast if the game has one (ESPN, ESPN+, TNT, ABC…),
 otherwise the feed's `localTv` (Detroit SportsNet). NHL Network doesn't count
