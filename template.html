@@ -3,57 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
 <title>RSS Feeds</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" id="favicon">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-title" content="RSS Feeds">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f1f4f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d1013" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0d1013">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Roboto+Slab:wght@500;700&display=swap">
 <style>
-/* Layout: a tab per team; under it one dated spine down the page, games as weighted bands on it, and the beat writing in the gaps between them. */
+/* Layout: a tab per team; under it one dated spine down the page, games as weighted bands on it, and the beat writing in the gaps between them.
+   Type follows The Athletic's three voices with free stand-ins for its licensed fonts: Libre Franklin for
+   nyt-franklin (labels, dates, scores), Source Serif 4 for nyt-cheltenham (headlines, teasers), Roboto Slab
+   for its RegularSlab (team tabs, section heads). Dark only, by Kyle's choice. */
 :root{
-  --ice:#f1f4f7; --card:#ffffff; --band:#fbfcfd;
-  --ink:#15181d; --muted:#616b78; --line:#d9e0e7; --line-soft:#e8edf1;
-  --accent:#ce1126; --accent-text:#ce1126; --accent-ink:#a60d1e; --accent-wash:#fdf2f3; --on-accent:#fff;
-  --loss:#78828f;
-  --ff-head:"Newsreader",Georgia,"Times New Roman",serif;
-  --ff-ui:"Barlow","Helvetica Neue",Arial,sans-serif;
-  --ff-score:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ice:#0d1013; --card:#15191e; --band:#171c22;
   --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
   --accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;
-  --loss:#6f7a87; color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --ice:#0d1013; --card:#15191e; --band:#171c22;
-  --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
-  --accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;
-  --loss:#6f7a87; color-scheme:dark;
+  --loss:#6f7a87;
+  --ff-head:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --ff-ui:"Libre Franklin","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --ff-slab:"Roboto Slab",Rockwell,Georgia,serif;
+  color-scheme:dark;
 }
 /* each tab wears its team's colour; the Red Wings' red is the default above.
-   --accent fills, --accent-text is the same hue dark enough to read as text,
-   --on-accent is the text on a filled pill (dark on orange, teal and gold). */
-:root[data-team="tigers"]{--accent:#fa4616; --accent-text:#c2410c; --accent-ink:#9a3412; --accent-wash:#fef1ea; --on-accent:#15181d;}
-:root[data-team="lions"]{--accent:#0076b6; --accent-text:#0076b6; --accent-ink:#005a8c; --accent-wash:#edf5fb; --on-accent:#fff;}
-:root[data-team="pistons"]{--accent:#00a3ad; --accent-text:#00767e; --accent-ink:#006a72; --accent-wash:#e9f7f8; --on-accent:#0d1013;}
-:root[data-team="cavaliers"]{--accent:#fdbb30; --accent-text:#8f6200; --accent-ink:#7d5600; --accent-wash:#fdf6e3; --on-accent:#15181d;}
-@media (prefers-color-scheme:dark){
-  :root[data-team="tigers"]:not([data-theme="light"]){--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
-  :root[data-team="lions"]:not([data-theme="light"]){--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
-  :root[data-team="pistons"]:not([data-theme="light"]){--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
-  :root[data-team="cavaliers"]:not([data-theme="light"]){--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
-}
-:root[data-team="tigers"][data-theme="dark"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
-:root[data-team="lions"][data-theme="dark"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
-:root[data-team="pistons"][data-theme="dark"]{--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
-:root[data-team="cavaliers"][data-theme="dark"]{--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
+   --accent fills, --accent-text is the same hue light enough to read as text,
+   --on-accent is the text on a filled pill. */
+:root[data-team="tigers"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
+:root[data-team="lions"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
+:root[data-team="pistons"]{--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
+:root[data-team="cavaliers"]{--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
 *{box-sizing:border-box}
 body{background:var(--ice);color:var(--ink);font-family:var(--ff-ui);font-size:15px;line-height:1.45;margin:0;padding:0 16px;-webkit-font-smoothing:antialiased}
 .wrap{max-width:860px;margin:0 auto;padding-block:0 64px}
@@ -64,23 +45,24 @@ a{color:inherit;text-decoration:none}
 
 /* team tabs */
 header.tabs{position:sticky;top:0;z-index:6;background:var(--ice);border-bottom:2px solid var(--ink);
-  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:18px;overflow-x:auto;scrollbar-width:none}
+  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}
 header.tabs::-webkit-scrollbar{display:none}
+/* team tabs read like The Athletic's own navigation: small uppercase Franklin */
 .tabs button{appearance:none;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;cursor:pointer;
-  font-family:var(--ff-score);font-weight:700;font-size:clamp(17px,4.4vw,21px);line-height:1;text-transform:uppercase;
-  color:var(--muted);padding:6px 0 9px;white-space:nowrap}
+  font-family:var(--ff-ui);font-weight:700;font-size:clamp(12.5px,3.4vw,15px);letter-spacing:.04em;text-transform:uppercase;line-height:1;
+  color:var(--muted);padding:8px 0 11px;white-space:nowrap}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .tabs button span{font-variant-numeric:tabular-nums;color:var(--accent-ink);font-weight:600}
 
 .standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
 .rec{display:flex;align-items:baseline;gap:8px}
-.rec b{font-family:var(--ff-score);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.rec b{font-family:var(--ff-slab);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
 
 /* up next */
 .next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:3px;background:var(--card);padding:16px 18px}
 .next:empty{display:none}
-.next h2{font-family:var(--ff-score);text-transform:uppercase;font-weight:700;font-size:26px;line-height:1.05;margin:7px 0 4px}
-.next h2 i{font-style:normal;color:var(--muted);font-weight:600;font-size:17px}
+.next h2{font-family:var(--ff-slab);font-weight:700;font-size:23px;line-height:1.15;margin:7px 0 4px}
+.next h2 i{font-family:var(--ff-ui);font-style:normal;color:var(--muted);font-weight:500;font-size:15px}
 .next .when{font-family:var(--ff-ui);font-size:13.5px;color:var(--muted)}
 .next .tv{margin-top:9px;display:flex}
 .tv b{font-family:var(--ff-ui);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);
@@ -91,7 +73,7 @@ header.tabs::-webkit-scrollbar{display:none}
 .feed::before{content:"";position:absolute;left:96px;top:0;bottom:34px;width:1px;background:var(--line);z-index:0}
 .row{position:relative;display:grid;grid-template-columns:96px 1fr;z-index:1}
 .when-col{text-align:right;padding:16px 26px 0 0;position:relative}
-.when-col time{display:block;font-family:var(--ff-score);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-variant-numeric:tabular-nums}
+.when-col time{display:block;font-family:var(--ff-ui);font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-variant-numeric:tabular-nums}
 .when-col small{display:block;font-size:10.5px;color:var(--muted);opacity:.85;font-variant-numeric:tabular-nums}
 .row.unread .when-col time{color:var(--accent-text)}
 /* only games sit on the spine; stories hang off it, indented clear of it */
@@ -102,7 +84,7 @@ header.tabs::-webkit-scrollbar{display:none}
 /* story: unread shows in its date; a read headline steps back */
 .story{display:block;padding:5px 0 13px;border-bottom:1px solid var(--line-soft)}
 .story:hover h3{color:var(--accent-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
-.story h3{font-family:var(--ff-head);font-weight:500;font-size:19.5px;line-height:1.26;margin:0;text-wrap:balance}
+.story h3{font-family:var(--ff-head);font-weight:600;font-size:19.5px;line-height:1.22;margin:0;text-wrap:balance}
 .story p{font-family:var(--ff-head);font-size:14.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;max-width:62ch}
 .story.read h3{color:var(--muted);font-weight:400}
 .story.read p{opacity:.65}
@@ -112,20 +94,20 @@ header.tabs::-webkit-scrollbar{display:none}
 .band{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:0 14px;
   background:var(--band);border:1px solid var(--line);border-radius:3px;padding:11px 14px}
 .row.game.win .band{background:var(--accent-wash);border-color:var(--accent)}
-.gno{font-family:var(--ff-score);font-weight:700;font-size:17px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.gno{font-family:var(--ff-ui);font-weight:700;font-size:13.5px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
 .row.game.win .gno{color:var(--accent-text)}
 .matchup{min-width:0}
-.matchup .opp{font-family:var(--ff-score);font-weight:700;font-size:23px;line-height:1.08;text-transform:uppercase}
-.matchup .opp i{font-style:normal;color:var(--muted);font-weight:600;font-size:17px}
+.matchup .opp{font-family:var(--ff-ui);font-weight:700;font-size:19px;line-height:1.15}
+.matchup .opp i{font-style:normal;color:var(--muted);font-weight:500;font-size:13.5px}
 .matchup .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
 .result{display:flex;align-items:center;gap:12px;justify-self:end}
-.sc{font-family:var(--ff-score);font-weight:700;font-size:28px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sc{font-family:var(--ff-ui);font-weight:700;font-size:24px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sc s{text-decoration:none;color:var(--muted);font-weight:600;padding:0 1px}
 .pill{font-family:var(--ff-ui);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;padding:4px 7px;white-space:nowrap}
 .pill.w{background:var(--accent);color:var(--on-accent)}
 .pill.l{border:1px solid var(--loss);color:var(--loss)}
 .after{text-align:right;min-width:62px}
-.after b{display:block;font-family:var(--ff-score);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
+.after b{display:block;font-family:var(--ff-ui);font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
 .after small{display:block;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 
 .empty{padding:26px 0 0 122px;color:var(--muted);font-family:var(--ff-head);font-style:italic}
@@ -135,7 +117,10 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 .linkbtn[hidden]{display:none}
 
 @media (max-width:620px){
-  header.tabs{gap:13px}
+  /* five tabs with counts don't fit a phone: the row scrolls, and fades at the right
+     edge to say so (the padding lets the last tab scroll clear of the fade) */
+  header.tabs{gap:14px;padding-right:28px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
   .feed::before{display:none}
   .row{grid-template-columns:1fr}
   .when-col{text-align:left;padding:14px 0 0;display:flex;gap:8px;align-items:baseline}

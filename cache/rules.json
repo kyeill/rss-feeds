@@ -1,45 +1,112 @@
 [
  {
+  "team": "Red Wings",
+  "teaser": false,
+  "hide": [
+   "nhl"
+  ],
+  "unless": [
+   "red wings",
+   "detroit"
+  ]
+ },
+ {
+  "team": "Tigers",
+  "teaser": false,
+  "hide": [
+   "mlb"
+  ],
+  "unless": [
+   "tigers",
+   "detroit"
+  ]
+ },
+ {
+  "team": "Lions",
+  "teaser": false,
+  "hide": [
+   "nfl"
+  ],
+  "unless": [
+   "lions",
+   "detroit"
+  ]
+ },
+ {
+  "team": "Pistons",
+  "teaser": false,
+  "hide": [
+   "nba"
+  ],
+  "unless": [
+   "pistons",
+   "detroit"
+  ]
+ },
+ {
+  "team": "Cavaliers",
+  "teaser": false,
+  "hide": [
+   "nba"
+  ],
+  "unless": [
+   "cavaliers",
+   "cavs",
+   "cleveland"
+  ]
+ },
+ {
   "team": "All",
   "teaser": false,
   "hide": [
-   "nhl",
-   "mlb",
-   "nfl",
-   "nba"
+   "power rankings",
+   "odds",
+   "betting",
+   "how to watch",
+   "watch guide",
+   "streaming guide",
+   "all 30 teams",
+   "all 32 teams",
+   "every team",
+   "playoff simulator"
   ],
   "unless": []
  },
  {
-  "team": "Tigers",
+  "team": "All",
   "teaser": false,
   "hide": [
-   "betting"
+   "the bounce",
+   "athletic hockey show",
+   "athletic football show",
+   "pick six",
+   "submit your",
+   "take your questions",
+   "fan survey"
   ],
   "unless": []
  },
  {
-  "team": "Tigers",
+  "team": "All",
   "teaser": false,
   "hide": [
-   "how to watch"
+   "hall of fame tiers",
+   "hall of very good",
+   "rooting guide",
+   "all-star game"
   ],
   "unless": []
  },
  {
-  "team": "Lions",
+  "team": "Cavaliers",
   "teaser": false,
   "hide": [
-   "how to watch"
+   "lebron"
   ],
-  "unless": []
- },
- {
-  "team": "Lions",
-  "teaser": false,
-  "hide": [
-   "odds"
-  ],
-  "unless": []
+  "unless": [
+   "cavaliers",
+   "cavs",
+   "cleveland"
+  ]
  }
 ]

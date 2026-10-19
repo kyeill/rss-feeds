@@ -197,6 +197,23 @@ library on this PC, so it is pixel maths with 4x4 supersampling):
 copy is the offline fallback. Icons are served cache-first, so if they change,
 bump `CACHE` in `sw.js`.
 
+## Look
+
+**Dark only** (Kyle, 2026-10-19) — no light palette, whatever the device is set to.
+
+**Type mirrors The Athletic** with free stand-ins, since its fonts are licensed
+to the NYT (read from its stylesheets on 2026-10-19):
+
+| The Athletic | here | used for |
+| --- | --- | --- |
+| nyt-franklin | Libre Franklin | tabs (small caps-style uppercase, like its nav), dates, labels, scores, opponents |
+| nyt-cheltenham | Source Serif 4 (600) | headlines and teasers |
+| RegularSlab | Roboto Slab | the big place / gap / odds figures, Up next opponent |
+
+On a phone the five tabs with their counts are wider than the screen in any
+font, so the tab row scrolls and fades at its right edge; the open tab scrolls
+into view and swiping changes team.
+
 ## Read and unread
 
 Opening a story marks it read, and the mark follows Kyle to every device. An
