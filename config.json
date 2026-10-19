@@ -64,6 +64,11 @@
           "label": "USMNT",
           "league": "soccer",
           "feed": "https://www.nytimes.com/athletic/rss/football/usmnt/"
+        },
+        {
+          "label": "Atlanta",
+          "league": "soccer",
+          "feed": "https://www.nytimes.com/athletic/rss/football/atlunited/"
         }
       ]
     },

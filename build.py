@@ -135,13 +135,21 @@ def read_rules():
 
 
 def hidden(article, team, rules, use_all=True):
-    """Does any rule for this team (or All) hide this story? Matching ignores
-    case and finds the words anywhere, so "NFL" also catches "NFL's"."""
+    """Does any rule hide this story? A rule applies when its Team is this
+    tab, All (unless the tab opts out), or -- on a tab built from several
+    feeds -- the story's own source label ("USMNT", "Atlanta"). Matching
+    ignores case and finds the words anywhere, so "NFL" also catches "NFL's".
+    A "*" in "Hide if it contains" matches every story, which turns that
+    row's "Unless" list into a keep-only list. A story survives only if no
+    row hides it, so two keep-only rows for one source must both be met."""
+    names = {team.lower(), (article.get("src") or "").lower()} - {""}
+    if use_all:
+        names.add("all")
     for rule in rules:
-        if rule["team"].lower() not in (("all", team.lower()) if use_all else (team.lower(),)):
+        if rule["team"].lower() not in names:
             continue
         text = (article["title"] + (" " + article["dek"] if rule["teaser"] else "")).lower()
-        if any(w in text for w in rule["hide"]) and not any(w in text for w in rule["unless"]):
+        if any(w == "*" or w in text for w in rule["hide"]) and not any(w in text for w in rule["unless"]):
             return True
     return False
 

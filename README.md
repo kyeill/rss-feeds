@@ -141,8 +141,11 @@ Paramount+), never the Spanish one ESPN lists beside it.
 
 **Soccer** and **Power Rankings** are story-only tabs (`kind: "stories"`): no
 schedule, no table, no Up next. Each story carries its source label after the
-time ("USMNT", "NFL"). Soccer reads the USMNT feed (Atlanta United's Athletic
-feed address wasn't findable — waiting on Kyle's link). Power Rankings reads
+time ("USMNT", "NFL"). Soccer reads the USMNT feed (`football/usmnt`) and Atlanta
+United's (`football/atlunited` — Kyle supplied it; guessed slugs all 404).
+Kyle's brief for it: USMNT match coverage and player roundups only, no
+single-player deep dives or FIFA politics; Atlanta stories plus at most a
+weekly MLS roundup, which is The Athletic's Sunday column "The Verdict". Power Rankings reads
 the four Detroit team feeds and keeps only headlines with "power rankings":
 the league feeds hold only a week or two of stories, but every ranking
 mentions every team, so the team feeds carry each one for months.
@@ -169,6 +172,12 @@ says which stories to drop. Kyle edits it; the next hourly build applies it.
 - **Unless it contains**: optional exceptions, comma-separated — e.g. hide
   "NHL" unless "Red Wings" keeps the league pieces that are about Detroit.
 - A row with nothing in "Hide if it contains" is ignored, so notes rows are fine.
+- **Team can be a source** on a tab built from several feeds: `USMNT` or
+  `Atlanta` on the Soccer tab, `NFL` etc. on Power Rankings.
+- **`*` in "Hide if it contains" means every story**, which turns "Unless it
+  contains" into a keep-only list. Two keep-only rows for the same source must
+  BOTH be met — the USMNT rows keep only stories naming the national team, and
+  of those only matches, squads and player roundups.
 - **A phrase can't contain a comma** — the comma splits it. "fan, explained"
   becomes "fan" and "explained", and "fan" alone hides every headline with
   "fans" or "fantastic" in it (found while testing, 2026-10-19).
