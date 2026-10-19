@@ -1,14 +1,16 @@
-"""Build the site: an RSS feed read against the team's schedule.
+"""Build the site: beat-writer RSS feeds read against each team's schedule.
 
-Sources, all public:
+One page, a tab per feed. Sources, all public:
 
-  * the feed itself (siftrss in front of The Athletic, which does not hand out
-    its own RSS any more) -- a few dozen items, always the newest ones;
-  * the NHL's public schedule endpoint, one call per season, and its standings;
-  * Hockey-Reference's playoff probabilities, at most twice a day (cache/).
+  * the feeds (siftrss in front of The Athletic, which does not hand out its
+    own RSS any more) -- about a hundred items each, always the newest;
+  * NHL: the league's own schedule and standings endpoints;
+  * MLB, NFL, NBA: ESPN's team schedules, standings and (NFL, NBA) power
+    index for playoff odds; MLB's odds ride along in its standings;
+  * NHL playoff odds from Hockey-Reference, at most twice a day (cache/).
 
-Every run re-asks the NHL and the feed and rewrites docs/index.html from
-template.html.
+Every run re-asks everything but Hockey-Reference and rewrites
+docs/index.html from template.html.
 
     python build.py
 """
@@ -30,12 +32,6 @@ def fetch(url):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=45) as r:
         return r.read().decode("utf-8", "replace")
-
-
-def season_of(today):
-    """The NHL season id for a date: 2026-10-18 and 2027-03-01 are both 20262027."""
-    y = today.year if today.month >= 7 else today.year - 1
-    return y, int(f"{y}{y + 1}")
 
 
 def story_id(link):
@@ -82,12 +78,16 @@ def read_feed(url, since):
     return items
 
 
-def read_standing(abbrev):
+def nhl_standing(abbrev, played):
     """Where the club stands: division place, and how far it is from the
     playoff line. A conference sends the top three of each division plus two
     wild cards, so a team outside is as far back as the NEARER of its
     division's third place and the conference's second wild card; a team
-    inside is as far clear as it is above the conference's first team out."""
+    inside is as far clear as it is above the conference's first team out.
+
+    `played` is the club's finished regular-season games from its schedule:
+    a table that disagrees (last season's, before a new one starts) is
+    not shown."""
     table = json.loads(fetch("https://api-web.nhle.com/v1/standings/now"))["standings"]
     us = next(t for t in table if t["teamAbbrev"]["default"] == abbrev)
     conf = [t for t in table if t["conferenceName"] == us["conferenceName"]]
@@ -99,13 +99,14 @@ def read_standing(abbrev):
         third = next(t for t in conf if t["divisionName"] == us["divisionName"] and t["divisionSequence"] == 3)
         wc2 = next(t for t in conf if t["wildcardSequence"] == 2)
         gap = min(third["points"], wc2["points"]) - us["points"]
+    current = abs(us["gamesPlayed"] - played) <= 1
     return {
-        "place": us["divisionSequence"],
-        "division": us["divisionName"],
+        "place": us["divisionSequence"] if current else None,
+        "division": us["divisionName"] + " Division",
         "inside": inside(us),
-        "gap": gap,
-        "points": us["points"],
-        "name": us["teamName"]["default"],
+        "gap": gap if current else None,
+        "unit": "Point",
+        "odds": read_odds(us["teamName"]["default"], us["points"]),
     }
 
 
@@ -153,7 +154,7 @@ def read_odds(name, points):
     return float(row["pct"])
 
 
-def pick_tv(broadcasts, local_tv):
+def nhl_tv(broadcasts, local_tv):
     """One network per game, the one Kyle would turn to in Michigan: a US
     national broadcast if there is one, otherwise the club's local channel.
     NHL Network doesn't count as national -- its games stay on the local
@@ -166,7 +167,7 @@ def pick_tv(broadcasts, local_tv):
     return national[0] if national else (local_tv if broadcasts else "")
 
 
-def read_schedule(abbrev, season, local_tv):
+def nhl_schedule(abbrev, season, local_tv):
     """The club's whole season: preseason, regular season, finished or not."""
     url = f"https://api-web.nhle.com/v1/club-schedule-season/{abbrev}/{season}"
     games = []
@@ -190,37 +191,206 @@ def read_schedule(abbrev, season, local_tv):
                 "os": them.get("score"),
                 "last": (g.get("gameOutcome") or {}).get("lastPeriodType"),
                 "venue": g["venue"]["default"],
-                "tv": pick_tv(g.get("tvBroadcasts", []), local_tv),
+                "tv": nhl_tv(g.get("tvBroadcasts", []), local_tv),
             }
         )
     games.sort(key=lambda g: g["startUTC"] or g["date"])
     return games
 
 
-def main():
-    today = dt.date.today()
-    start_year, season = season_of(today)
-    # The feed carries older items than the page wants; a season starts in July.
-    since = f"{start_year}-07-01"
+# ---- MLB, NFL, NBA: ESPN ---------------------------------------------------
 
+ESPN = {"mlb": "baseball/mlb", "nfl": "football/nfl", "nba": "basketball/nba"}
+
+# How many teams per conference (league, for MLB) make the playoffs, and
+# whether winning the division guarantees a place. The NBA's line is the top
+# six: seeds 7-10 only reach the play-in.
+SPOTS = {"mlb": (6, True), "nfl": (7, True), "nba": (6, False)}
+
+# "National" in ESPN's listing but not the channel to watch: out-of-market
+# packages, and cable channels whose games the local carrier shows too.
+NOT_NATIONAL = {"MLB.TV", "MLBN", "MLB Network", "NBA TV", "NBA League Pass", "NFL+"}
+
+
+def espn_json(url):
+    return json.loads(fetch(url))
+
+
+def espn_tv(broadcasts, home, local_tv):
+    """One network: a national broadcast if there is one (TV before
+    streaming), else this team's own local listing, else its usual local
+    channel from config (ESPN lists none for most Pistons and Cavaliers games)."""
+    def name(b):
+        return (b.get("media") or {}).get("shortName") or ""
+    national = sorted(
+        (b for b in broadcasts
+         if (b.get("market") or {}).get("type") == "National" and name(b) and name(b) not in NOT_NATIONAL),
+        key=lambda b: (b.get("type") or {}).get("shortName") != "TV",
+    )
+    ours = [b for b in broadcasts if (b.get("market") or {}).get("type") == ("Home" if home else "Away") and name(b)]
+    return name(national[0]) if national else name(ours[0]) if ours else local_tv
+
+
+def espn_schedule(league, abbrev, season, local_tv):
+    """Preseason, regular season and postseason. ESPN's team schedule needs
+    an explicit seasontype, and its scores are {"value": 3.0} objects."""
+    games = []
+    for seasontype in (1, 2, 3):
+        url = (f"https://site.api.espn.com/apis/site/v2/sports/{ESPN[league]}/teams/{abbrev}/schedule"
+               f"?season={season}&seasontype={seasontype}")
+        for e in espn_json(url).get("events", []):
+            comp = e["competitions"][0]
+            status = comp["status"]["type"]
+            if status["name"] in ("STATUS_POSTPONED", "STATUS_CANCELED"):
+                continue                      # the makeup date is its own event
+            us = next(c for c in comp["competitors"] if c["team"]["abbreviation"] == abbrev)
+            them = next(c for c in comp["competitors"] if c is not us)
+            done = bool(status.get("completed"))
+            score = lambda c: int((c.get("score") or {}).get("value", 0)) if done else None
+            # "Final/OT", "Final/2OT"; baseball's "Final/10" is extra innings, not shown
+            detail = status.get("detail") or ""
+            last = detail.split("/", 1)[1] if done and "/" in detail and "OT" in detail else None
+            start = e["date"] if len(e["date"]) > 17 else e["date"].replace("Z", ":00Z")
+            home = us.get("homeAway") == "home"
+            games.append({
+                "id": e["id"],
+                "date": start[:10],
+                "startUTC": start,
+                "tbd": comp.get("timeValid") is False,
+                "type": seasontype,
+                "home": home,
+                "opp": them["team"]["abbreviation"],
+                "oppName": them["team"].get("name") or them["team"].get("shortDisplayName", ""),
+                "oppPlace": them["team"].get("location", ""),
+                "ds": score(us),
+                "os": score(them),
+                "last": last,
+                "venue": (comp.get("venue") or {}).get("fullName", ""),
+                "tv": espn_tv(comp.get("broadcasts") or [], home, local_tv),
+            })
+    games.sort(key=lambda g: g["startUTC"])
+    return games
+
+
+def division_label(name):
+    """"American League Central" -> "AL Central"; the NBA's bare "Central" ->
+    "Central Division"; the NFL's "NFC North" stays."""
+    name = name.replace("American League", "AL").replace("National League", "NL")
+    return name if name.split()[0] in ("AL", "NL", "AFC", "NFC") else name + " Division"
+
+
+def espn_standing(league, abbrev, season, played):
+    """Division place and games from the playoff line, like the NHL's but in
+    games: a team outside is as far back as the nearer of the last playoff
+    seed and (where winning it is a ticket) its division's leader; a team
+    inside is as far clear as it is ahead of the first team out.
+
+    ESPN's table follows ESPN's idea of the current season -- the NBA's still
+    shows preseason records the week before opening night, MLB's shows the
+    finished season through the winter. A table whose games played disagree
+    with the schedule's is not shown; the odds still are when they belong to
+    this season."""
+    data = espn_json(f"https://site.api.espn.com/apis/v2/sports/{ESPN[league]}/standings?level=3")
+    rows = []
+
+    def walk(node, trail):
+        for child in node.get("children", []):
+            walk(child, trail + [child.get("name", "")])
+        for e in (node.get("standings") or {}).get("entries", []):
+            st = {s.get("name"): s for s in e.get("stats", []) if s.get("name")}
+            num = lambda k: float((st.get(k) or {}).get("value") or 0)
+            rows.append({
+                "abbr": e["team"]["abbreviation"], "conf": trail[0], "div": trail[-1],
+                "w": num("wins"), "l": num("losses"), "t": num("ties"),
+                "seed": num("playoffSeed") or 99, "pct": num("winPercent"),
+                "odds": (st.get("playoffPercent") or {}).get("displayValue"),
+            })
+
+    walk(data, [])
+    us = next(r for r in rows if r["abbr"] == abbrev)
+    conf = sorted((r for r in rows if r["conf"] == us["conf"]), key=lambda r: r["seed"])
+    div = sorted((r for r in conf if r["div"] == us["div"]), key=lambda r: (-r["pct"], r["seed"]))
+    spots, div_ticket = SPOTS[league]
+    behind = lambda a, b: ((a["w"] - b["w"]) + (b["l"] - a["l"])) / 2      # b's games behind a
+    inside = us["seed"] <= spots
+    if inside:
+        first_out = conf[spots] if len(conf) > spots else None
+        gap = behind(us, first_out) if first_out else None
+    else:
+        gap = behind(conf[spots - 1], us)
+        if div_ticket:
+            gap = min(gap, behind(div[0], us))
+
+    current = abs((us["w"] + us["l"] + us["t"]) - played) <= 1
+    odds = None
+    if league == "mlb":
+        if current and us["odds"]:
+            odds = float(us["odds"].rstrip("%"))
+    else:
+        pi = espn_json(f"https://site.web.api.espn.com/apis/fitt/v3/sports/{ESPN[league]}/powerindex")
+        if (pi.get("currentSeason") or {}).get("year") == season:
+            names = {c["name"]: c["names"] for c in pi.get("categories", [])}
+            for t in pi.get("teams", []):
+                if t["team"]["abbreviation"] == abbrev:
+                    for c in t.get("categories", []):
+                        proj = dict(zip(names.get(c["name"], []), c.get("values", [])))
+                        if isinstance(proj.get("probmakeplayoffs"), (int, float)):
+                            odds = float(proj["probmakeplayoffs"])
+    if gap is not None and gap == int(gap):
+        gap = int(gap)
+    return {
+        "place": div.index(us) + 1 if current else None,
+        "division": division_label(us["div"]),
+        "inside": inside,
+        "gap": gap if current else None,
+        "unit": "Game",
+        "odds": odds,
+    }
+
+
+# ---- seasons ---------------------------------------------------------------
+
+def season_for(league, today):
+    """(first day of stories to keep, season id the schedule APIs want).
+
+    A season's stories start with its offseason: July 1 for hockey and
+    basketball (free agency), March 1 for football (the new league year),
+    November 1 for baseball (after the World Series)."""
+    y, m = today.year, today.month
+    if league in ("nhl", "nba"):
+        start = y if m >= 7 else y - 1
+        return f"{start}-07-01", (int(f"{start}{start + 1}") if league == "nhl" else start + 1)
+    if league == "nfl":
+        start = y if m >= 3 else y - 1
+        return f"{start}-03-01", start
+    season = y + 1 if m >= 11 else y
+    return f"{season - 1}-11-01", season
+
+def main():
     template = (HERE / "template.html").read_text(encoding="utf-8")
     out = HERE / "docs"
     out.mkdir(exist_ok=True)
 
-    # One page, a tab per feed.
+    # One page, a tab per feed, in config order.
     feeds = []
     for feed in CONFIG["feeds"]:
+        league, team, local_tv = feed["league"], feed["team"], feed.get("localTv", "")
+        since, season = season_for(league, dt.date.today())
         articles = read_feed(feed["feed"], since)
-        games = read_schedule(feed["nhl"], season, feed.get("localTv", ""))
-        standing = read_standing(feed["nhl"])
-        standing["odds"] = read_odds(standing["name"], standing["points"])
-        print(f"  {standing}")
-        feeds.append({k: feed[k] for k in ("slug", "short", "source")}
+        if league == "nhl":
+            games = nhl_schedule(team, season, local_tv)
+        else:
+            games = espn_schedule(league, team, season, local_tv)
+        played = len([g for g in games if g["ds"] is not None and g["type"] == 2])
+        if league == "nhl":
+            standing = nhl_standing(team, played)
+        else:
+            standing = espn_standing(league, team, season, played)
+        feeds.append({k: feed[k] for k in ("slug", "short", "league")}
                      | {"articles": articles, "games": games, "standing": standing})
-        played = [g for g in games if g["ds"] is not None and g["type"] == 2]
         print(
             f"{feed['short']}: {len(articles)} stories since {since}, "
-            f"{len(played)} of {len([g for g in games if g['type'] == 2])} games played"
+            f"{played} of {len([g for g in games if g['type'] == 2])} games played\n  {standing}"
         )
     data = json.dumps(
         {"sync": CONFIG.get("sync", ""), "feeds": feeds},

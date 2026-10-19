@@ -40,10 +40,10 @@ a{color:inherit;text-decoration:none}
 
 /* team tabs */
 header.tabs{position:sticky;top:0;z-index:6;background:var(--ice);border-bottom:2px solid var(--ink);
-  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:26px;overflow-x:auto;scrollbar-width:none}
+  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}
 header.tabs::-webkit-scrollbar{display:none}
 .tabs button{appearance:none;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;cursor:pointer;
-  font-family:var(--ff-score);font-weight:700;font-size:clamp(26px,6.5vw,38px);line-height:1;text-transform:uppercase;
+  font-family:var(--ff-score);font-weight:700;font-size:clamp(22px,5.4vw,28px);line-height:1;text-transform:uppercase;
   color:var(--muted);padding:6px 0 9px;white-space:nowrap}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
 .tabs button span{font-variant-numeric:tabular-nums;color:var(--red-ink);font-weight:600}
@@ -173,32 +173,37 @@ function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
 function side(g){ return '<i>'+(g.home ? 'vs' : 'at')+'</i> '; }
 function ordinal(n){ var s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
 
-/* one team: games in order with the running record, and each story tied to the game it follows */
+/* one team: games in order with the running record. Hockey records W-L-OT (an
+   overtime or shootout loss is its own column); football adds ties only once
+   there is one; baseball and basketball are W-L. */
 function prep(feed){
+  var hockey = feed.league === 'nhl';
   var games = feed.games.slice().sort(function(a,b){
     return (a.startUTC||a.date) < (b.startUTC||b.date) ? -1 : 1; });
-  var w=0,l=0,o=0,n=0,played=[];
+  var w=0,l=0,o=0,t=0,n=0;
   games.forEach(function(g){
     g.p = parts(g.startUTC || g.date+'T23:00:00Z');
     g.pre = g.type === 1;
     g.done = g.ds !== null && g.ds !== undefined;
-    if(!g.done) return;
-    g.won = g.ds > g.os;
-    g.ot = g.last === 'OT' || g.last === 'SO';
-    g.pill = g.won ? ('W' + (g.ot ? ' '+g.last : '')) : (g.ot ? 'L '+g.last : 'L');
-    g.cls = g.won ? 'w' : 'l';
+    if(g.done){
+      g.won = g.ds > g.os;
+      g.tie = g.ds === g.os;
+      // overtime shows on the result: "W OT", "L SO", "L 2OT" (the NHL's REG is plain)
+      var extra = g.last && g.last !== 'REG' ? ' '+g.last : '';
+      g.pill = g.tie ? 'T' : (g.won ? 'W' : 'L') + extra;
+      g.cls = g.won ? 'w' : 'l';
+    }
     if(g.pre){ g.gno = 'PS'; return; }
+    if(g.type === 3){ g.gno = 'PO'; return; }      // postseason: no game number, no record
     n++; g.gno = 'G'+n;
-    if(g.won) w++; else if(g.ot) o++; else l++;
-    g.rec = w+'-'+l+'-'+o; g.pts = w*2 + o;
-    played.push(g);
+    if(!g.done) return;
+    if(g.won) w++; else if(g.tie) t++; else if(hockey && extra) o++; else l++;
+    g.rec = hockey ? w+'-'+l+'-'+o : w+'-'+l+(t ? '-'+t : '');
   });
-  var nreg = n;
-  games.forEach(function(g){ if(!g.done && !g.pre){ nreg++; g.gno = 'G'+nreg; } });
 
   var arts = feed.articles.slice().sort(function(a,b){ return a.iso < b.iso ? -1 : 1; });
   arts.forEach(function(a){ a.p = parts(a.iso); });
-  return {feed:feed, games:games, played:played, arts:arts};
+  return {feed:feed, games:games, arts:arts};
 }
 var TEAMS = D.feeds.map(prep);
 
@@ -259,10 +264,12 @@ function pull(){
     .catch(function(){ note(OFFLINE); });
 }
 
-/* which team is showing: the #slug in the address, so a tab can be bookmarked */
+/* which team is showing: the #slug in the address if there is one, else the
+   tab this browser last had open, else the first */
 var cur = 0;
 function pick(){
   var slug = location.hash.slice(1);
+  if(!slug){ try{ slug = localStorage.getItem('rssf:tab') || ''; }catch(e){} }
   TEAMS.forEach(function(t, i){ if(t.feed.slug === slug) cur = i; });
 }
 function tabs(){
@@ -271,6 +278,10 @@ function tabs(){
     return '<button type="button" role="tab" data-i="'+i+'" aria-selected="'+(i===cur)+'">'+esc(t.feed.short)+
       (n ? ' <span>('+n+')</span>' : '')+'</button>';
   }).join('');
+  // five tabs overflow a phone: keep the open one in view
+  var bar = document.getElementById('tabs'), on = bar.querySelector('[aria-selected="true"]');
+  if(on && (on.offsetLeft < bar.scrollLeft || on.offsetLeft + on.offsetWidth > bar.scrollLeft + bar.clientWidth))
+    bar.scrollLeft = on.offsetLeft - 16;
   var left = unreadIds().length, btn = document.getElementById('allRead');
   btn.textContent = 'Mark all '+left+' '+TEAMS[cur].feed.short+' stories read';
   btn.hidden = !left;
@@ -285,28 +296,35 @@ function render(){
 
   // where the team stands: big text, then what it's measured against
   var S = T.feed.standing, $ = function(id){ return document.getElementById(id); };
-  $('placeNum').textContent = ordinal(S.place)+' Place';
-  $('placeNote').textContent = S.division+' Division';
+  $('placeNum').textContent = S.place ? ordinal(S.place)+' Place' : '—';
+  $('placeNote').textContent = S.division;
   if(S.gap === null){ $('gapNum').textContent = '—'; $('gapNote').textContent = 'playoff spot'; }
   else {
-    $('gapNum').textContent = S.gap+' Point'+(S.gap === 1 ? '' : 's')+(S.inside ? ' Clear' : ' Back');
+    $('gapNum').textContent = (S.gap % 1 ? S.gap.toFixed(1) : S.gap)+' '+S.unit+(S.gap === 1 ? '' : 's')+(S.inside ? ' Clear' : ' Back');
     $('gapNote').textContent = S.inside ? 'of first team out' : 'of playoff spot';
   }
   var o = S.odds;
   $('oddsNum').textContent = o === null ? '—' : o > 0 && o < 1 ? '<1%' : o > 99 && o < 100 ? '>99%' : Math.round(o)+'%';
   // Hockey-Reference starts a season's odds once every team has played 10 games
-  $('oddsNote').textContent = o === null ? 'playoff odds · after 10 games' : 'playoff odds';
+  $('oddsNote').textContent = o === null && T.feed.league === 'nhl' ? 'playoff odds · after 10 games' : 'playoff odds';
 
   var g0 = games.filter(function(g){ return !g.done; })[0];
   document.getElementById('next').innerHTML = !g0 ? '' :
     '<div class="lbl">Up next</div>'+
     '<h2>'+side(g0)+esc(g0.oppPlace+' '+g0.oppName)+'</h2>'+
-    '<div class="when num">'+g0.p.wd+', '+g0.p.mon+' '+g0.p.day+' &middot; '+g0.p.time+' ET &middot; '+esc(g0.venue)+'</div>'+
+    '<div class="when num">'+g0.p.wd+', '+g0.p.mon+' '+g0.p.day+' &middot; '+(g0.tbd ? 'Time TBD' : g0.p.time+' ET')+' &middot; '+esc(g0.venue)+'</div>'+
     (g0.tv ? '<div class="tv"><b>'+esc(g0.tv)+'</b></div>' : '');
 
   // each game, then the stories filed before the next one shown. A story sits under the
   // last finished game before it: the one it follows may still be being played.
   var done = games.filter(function(g){ return g.done; });
+  // The timeline starts at the game the oldest story follows: a feed only reaches back
+  // about a hundred stories, and baseball's first months would be a long run of empty gaps.
+  if(arts.length){
+    var from = 0;
+    done.forEach(function(g, i){ if(g.p.t <= arts[0].p.t) from = i; });
+    done = done.slice(from);
+  }
   arts.forEach(function(a){
     a.under = null;
     for(var i=0;i<done.length && done[i].p.t <= a.p.t;i++) a.under = done[i];
@@ -374,7 +392,9 @@ document.getElementById('tabs').addEventListener('click', function(e){
   if(!b) return;
   cur = +b.dataset.i;
   history.replaceState(null, '', '#'+TEAMS[cur].feed.slug);
+  try{ localStorage.setItem('rssf:tab', TEAMS[cur].feed.slug); }catch(e){}
   render();
+  window.scrollTo(0, 0);
 });
 window.addEventListener('hashchange', function(){ pick(); render(); });
 // back from another app or tab: pick up whatever was read on the other device

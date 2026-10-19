@@ -7,15 +7,17 @@ the next morning, the contract news that breaks on an off day.
 
 Live: https://kyeill.github.io/rss-feeds/ · repo: kyeill/rss-feeds
 
-First feed: **Detroit Red Wings — The Athletic**, through
-[siftrss](https://siftrss.com/f/Jz69b6rknd9), matched against the NHL's public
-schedule for Detroit.
+Five tabs, in Kyle's order: **Tigers, Lions, Pistons, Red Wings, Cavaliers** —
+each The Athletic's beat feed through siftrss (URLs in `config.json`). The Red
+Wings came first (2026-10-18); the other four were added the same night under
+the same rules. Hockey uses the NHL's own API; baseball, football and
+basketball use ESPN's.
 
 ## The pieces
 
 | file | what it does |
 | --- | --- |
-| `config.json` | the read-list address, and the feeds: tab name, source, NHL club, local TV channel, feed URL |
+| `config.json` | the read-list address, and the feeds: tab name, league (`nhl` `mlb` `nfl` `nba`), team abbreviation, local TV channel, feed URL |
 | `build.py` | reads each feed and that club's season, writes one page with a tab per feed |
 | `template.html` | the whole page — CSS and the script that lays out the timeline |
 | `docs/index.html` | the built page, committed, served by Pages from `main` |
@@ -70,10 +72,38 @@ last season with blank odds, so a value is used only when the page's points
 for the team match the NHL's. Until then the page shows "—" and "after 10
 games".
 
+**Each sport, under the same rules:**
+
+| | stories kept from | gap unit | playoff line | odds |
+| --- | --- | --- | --- | --- |
+| NHL | July 1 | points | top 3 per division + 2 wild cards | Hockey-Reference |
+| NBA | July 1 | games | top 6 seeds (7-10 are only the play-in) | ESPN power index |
+| NFL | March 1 | games | 7 seeds; a division title is a ticket | ESPN power index |
+| MLB | November 1 (prior year) | games | 6 seeds; a division title is a ticket | ESPN standings `playoffPercent` |
+
+Records: hockey W-L-OT, football W-L (W-L-T once there's a tie), baseball and
+basketball W-L. Results carry overtime ("W OT", "L SO", "L 2OT"); baseball's
+extra innings are not shown. Preseason games are `PS`, postseason `PO`, neither
+numbered nor counted. Postponed and cancelled games are dropped (the makeup is
+its own event). The timeline starts at the game the oldest story follows: a
+feed reaches back only ~100 stories, so the Tigers' tab begins in June rather
+than with 70 empty gaps. ESPN's tables follow ESPN's idea of the current season
+(the NBA's shows preseason records until opening night, MLB's the finished
+season all winter), so a table whose games played disagree with the schedule's
+shows "—" for place and gap; odds still show when they are this season's.
+NFL times not yet set read "Time TBD".
+
+The last tab opened is remembered per browser; `#slug` in the address wins.
+
 **TV:** a US national broadcast if the game has one (ESPN, ESPN+, TNT, ABC…),
 otherwise the feed's `localTv` (Detroit SportsNet). NHL Network doesn't count
 as national: its games stay on the local channel too. A game the API lists no
-broadcast for at all shows none.
+broadcast for at all shows none. For ESPN sports the same idea: a national
+listing (TV before streaming) unless it is MLB.TV, MLB Network, NBA TV or NBA
+League Pass, then the team's own home/away listing (the Tigers' is
+"Tigers.TV"), then `localTv`: **TV20 Detroit** for the Pistons and **DAZN** for
+the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
+none — every NFL game has a network.
 
 ## Read and unread
 

@@ -2,13 +2,49 @@
   "sync": "https://script.google.com/macros/s/AKfycbw8vFkELzj4_cTKh7vrQ55az3JtItkFBx_6PoCL20EJ5HnHCfomt4u75FrOKVrSgxh_2g/exec",
   "feeds": [
     {
-      "slug": "redwings",
-      "place": "Detroit",
-      "short": "Red Wings",
+      "slug": "tigers",
+      "short": "Tigers",
+      "league": "mlb",
+      "team": "DET",
+      "localTv": "Tigers.TV",
       "source": "The Athletic",
-      "nhl": "DET",
-      "feed": "https://siftrss.com/f/Jz69b6rknd9",
-      "localTv": "Detroit SportsNet"
+      "feed": "https://www.siftrss.com/f/r1DrAwLJqJ"
+    },
+    {
+      "slug": "lions",
+      "short": "Lions",
+      "league": "nfl",
+      "team": "DET",
+      "localTv": "",
+      "source": "The Athletic",
+      "feed": "https://www.siftrss.com/f/1qXJJ0AXWd"
+    },
+    {
+      "slug": "pistons",
+      "short": "Pistons",
+      "league": "nba",
+      "team": "DET",
+      "localTv": "TV20 Detroit",
+      "source": "The Athletic",
+      "feed": "https://www.siftrss.com/f/oDro6LlaVm"
+    },
+    {
+      "slug": "redwings",
+      "short": "Red Wings",
+      "league": "nhl",
+      "team": "DET",
+      "localTv": "Detroit SportsNet",
+      "source": "The Athletic",
+      "feed": "https://siftrss.com/f/Jz69b6rknd9"
+    },
+    {
+      "slug": "cavaliers",
+      "short": "Cavaliers",
+      "league": "nba",
+      "team": "CLE",
+      "localTv": "DAZN",
+      "source": "The Athletic",
+      "feed": "https://www.siftrss.com/f/7yJ8qZLnyB"
     }
   ]
 }
