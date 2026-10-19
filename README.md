@@ -129,24 +129,38 @@ League Pass, then the team's own home/away listing (the Tigers' is
 the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
 none — every NFL game has a network.
 
-## Michigan Football and Michigan Basketball (added 2026-10-19, first on home)
+## Michigan Football, Basketball and Hockey (added 2026-10-19, first on home)
 
-Kyle's four sources: The Athletic's Michigan football and basketball feeds,
-MGoBlog (`mgoblog.com/fbfeed`, both sports and more) and UMHoops. His rule:
-MGoBlog posts that are purely basketball go to Basketball; everything else of
-MGoBlog's — football, hockey, podcasts, mixed — goes to Football.
+Kyle's sources: The Athletic's Michigan football and basketball feeds,
+MGoBlog (`mgoblog.com/fbfeed`, every sport) and UMHoops. MGoBlog posts that
+are purely basketball go to Basketball, purely hockey to Hockey (added the same
+day, under Basketball), everything else — football, podcasts, mixed — to
+Football. There is no Athletic Michigan hockey feed, so Hockey is MGoBlog only.
 
 - **Sorting MGoBlog**: its feed has no categories but carries each post's full
-  text, so `is_basketball()` counts terms only one sport uses; a post is
-  basketball with some basketball terms (a "Hoops"/"WBB" headline counts
-  double) and next to no football or hockey ones (hockey shares "rebound"
-  and "paint"). Checked on 21 posts. Women's basketball counts as basketball.
+  text, so `sport_of()` counts terms only one sport uses; a post is basketball
+  (or hockey) with some of that sport's terms (a "Hoops"/"WBB"/"Hockey"
+  headline counts double) and next to none of the others' — one stray
+  mention allowed, since hockey and basketball share "rebound" and "paint".
+  Checked on 21 posts. Women's basketball counts as basketball.
 - **MGoBlog keeps only its newest 10 posts**, about four days, so posts are
   remembered in `cache/archive/` (one JSON per feed, sport decided once,
   400 days kept) and every build adds what's new.
-- **UMHoops is not included**: its firewall refuses the build's HTTP client
-  (Python's, and Windows' curl) whatever user agent it sends; getting around
-  that would mean evading their bot protection, so it was left out.
+- **UMHoops comes from its WordPress REST API** (`/wp-json/wp/v2/posts`, up to
+  300 posts since April 1): its firewall refuses the build at `/feed/` (Python's
+  client and Windows' curl, whatever the user agent) but serves the site's own
+  public API. Trying other HTTP clients until one passed the feed's firewall
+  was ruled out as evading bot protection; the API is the site's front door.
+  Feedly's public stream API (`cloud.feedly.com/v3/streams/contents?streamId=
+  feed/https://umhoops.com/feed/`) also works — the fallback if the API ever closes.
+- **Hockey standings are counted, not fetched**: ESPN publishes none for college
+  hockey, so `hockey_standing()` reads the seven Big Ten members' schedules
+  (members from ESPN's core API, cached a week in `cache/`) and counts
+  completed regular-season games between members, conference-tournament
+  games left out by their note. Figures: place (win % with a tie as half),
+  **Big Ten record** (not games back — the league's points system weights
+  OT/shootouts and would be a guess), and **NPI rank** from the
+  ncaa-api.henrygd.me mirror the standings app uses (NPI decides NCAA bids).
 - Games: ESPN college football / men's basketball, team id 130. Place and
   games back are Michigan's Big Ten rank and ESPN's gamesBehind (the leader
   shows games clear of second). Football's third figure is ESPN FPI's playoff
