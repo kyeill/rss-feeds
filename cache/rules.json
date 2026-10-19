@@ -221,5 +221,29 @@
    "crisler",
    "ann arbor"
   ]
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "podcast",
+   "mgoradio",
+   "wtka",
+   "video:",
+   "highlights"
+  ],
+  "unless": []
+ },
+ {
+  "team": "MGoBlog",
+  "teaser": false,
+  "hide": [
+   "punt-counterpunt",
+   "fee fi foe film",
+   "preview:"
+  ],
+  "unless": [
+   "season"
+  ]
  }
 ]
