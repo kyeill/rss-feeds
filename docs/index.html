@@ -70,10 +70,10 @@ header.tabs::-webkit-scrollbar{display:none}
 .when-col time{display:block;font-family:var(--ff-score);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-variant-numeric:tabular-nums}
 .when-col small{display:block;font-size:10.5px;color:var(--muted);opacity:.85;font-variant-numeric:tabular-nums}
 .row.unread .when-col time{color:var(--red)}
-.dot{position:absolute;right:-5px;top:20px;width:9px;height:9px;border-radius:50%;background:var(--ice);border:1.5px solid var(--line)}
-.row.game .dot{width:13px;height:13px;right:-7px;top:18px;background:var(--red);border-color:var(--red)}
+/* only games sit on the spine; stories hang off it, indented to line up with the gap labels */
+.dot{position:absolute;right:-7px;top:18px;width:13px;height:13px;border-radius:50%;background:var(--red);border:1.5px solid var(--red)}
 .row.game.pre .dot{background:var(--ice);border-color:var(--muted)}
-.body-col{padding:12px 0;min-width:0}
+.body-col{padding:12px 0 12px 26px;min-width:0}
 
 /* story: unread shows in its date; a read headline steps back */
 .story{display:block;padding:5px 0 13px;border-bottom:1px solid var(--line-soft)}
@@ -84,7 +84,7 @@ header.tabs::-webkit-scrollbar{display:none}
 .story.read p{opacity:.65}
 
 /* game band */
-.row.game .body-col{padding:9px 0}
+.row.game .body-col{padding-block:9px}
 .band{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:0 14px;
   background:var(--band);border:1px solid var(--line);border-radius:3px;padding:11px 14px}
 .row.game.win .band{background:var(--win-wash);border-color:var(--red)}
@@ -121,8 +121,8 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   .row{grid-template-columns:1fr}
   .when-col{text-align:left;padding:14px 0 0;display:flex;gap:8px;align-items:baseline}
   .when-col small{display:inline}
-  .dot,.row.game .dot{display:none}
-  .body-col{padding-top:4px}
+  .dot{display:none}
+  .body-col{padding-top:4px;padding-left:0}
   .gap,.chapter,.empty{padding-left:0}
   .band{grid-template-columns:34px 1fr;gap:4px 12px}
   .result{grid-column:2;justify-self:start;margin-top:7px}
@@ -345,7 +345,7 @@ function render(){
     if(b.type === 'story'){
       var a = b.a, isRead = read.has(a.id);
       return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
-        '</time><small>'+esc(a.p.time)+'</small><span class="dot"></span></div>'+
+        '</time><small>'+esc(a.p.time)+'</small></div>'+
         '<div class="body-col"><a class="story'+(isRead?' read':'')+'" data-id="'+esc(a.id)+'" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
         '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a></div></div>';
     }
