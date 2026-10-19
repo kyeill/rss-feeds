@@ -258,6 +258,8 @@ arts.forEach(function(a){
   a.kind = a.post ? 'post' : 'off';
   if(a.post){
     a.rel = Math.round(hrs)+'h after '+(prev.home?'vs ':'at ')+prev.opp+' '+prev.ds+'–'+prev.os;
+  } else if(prev && !prev.done){
+    a.rel = 'after puck drop '+(prev.home?'vs ':'at ')+prev.opp;
   } else if(prev){
     var dd = dayDiff(prev.p, a.p);
     a.rel = (dd<=1 ? 'day after ' : dd+' days after ')+(prev.home?'vs ':'at ')+prev.opp;
@@ -273,24 +275,30 @@ function build(){
   var oldestFirst = document.getElementById('oldest').checked;
   var shown = arts.filter(function(a){ return filter === 'all' || a.kind === filter; });
   var blocks = [];
-  var early = shown.filter(function(a){ return !a.prev; });
+  var visible = games.filter(function(g){ return g.done && !(hidePre && g.pre); });
+  // A story sits under the last game on the page before it, not necessarily the
+  // game it follows: that one may be a hidden preseason game, or still being played.
+  shown.forEach(function(a){
+    a.under = null;
+    for(var i=0;i<visible.length && visible[i].p.t <= a.p.t;i++) a.under = visible[i];
+  });
+  var early = shown.filter(function(a){ return !a.under; });
 
   if(early.length){
     blocks.push({type:'chapter', h:'Offseason into camp',
       s:'Nothing on the schedule yet — '+early.length+' stories filed before the first puck drop of the season.'});
     early.forEach(function(a){ blocks.push({type:'story', a:a}); });
   }
-  var visible = games.filter(function(g){ return g.done && !(hidePre && g.pre); });
   visible.forEach(function(g, i){
     if(i > 0){
       var prevG = visible[i-1];
       var dd = dayDiff(prevG.p, g.p);
-      var cnt = shown.filter(function(a){ return a.prev === prevG; }).length;
+      var cnt = shown.filter(function(a){ return a.under === prevG; }).length;
       blocks.push({type:'gap', text:(dd <= 1 ? 'Back-to-back' : dd+' days between games') +
         (cnt ? ' · '+cnt+' stor'+(cnt===1?'y':'ies') : ' · nothing filed')});
     }
     blocks.push({type:'game', g:g});
-    shown.filter(function(a){ return a.prev === g; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
+    shown.filter(function(a){ return a.under === g; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
   });
   if(!oldestFirst) blocks.reverse();
 
@@ -338,7 +346,8 @@ document.getElementById('cAll').textContent = arts.length;
 document.getElementById('cPost').textContent = arts.filter(function(a){ return a.kind === 'post'; }).length;
 document.getElementById('cOff').textContent = arts.filter(function(a){ return a.kind === 'off'; }).length;
 var newest = arts[arts.length-1];
-document.getElementById('stamp').textContent = 'Feed read '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET';
+document.getElementById('stamp').textContent = newest ?
+  'Newest story '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET' : 'No stories yet this season';
 build();
 })();
 </script>
