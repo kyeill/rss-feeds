@@ -104,12 +104,9 @@ header.tabs::-webkit-scrollbar{display:none}
 .after b{display:block;font-family:var(--ff-score);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
 .after small{display:block;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 
-/* gaps and chapter rules */
+/* gap labels between games */
 .gap{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px 0 10px 122px}
 .gap hr{flex:1;height:0;border:0;border-top:1px solid var(--line-soft);min-width:12px}
-.chapter{grid-column:1/-1;padding:30px 0 6px 122px;border-top:1px solid var(--line);margin-top:22px}
-.chapter h2{font-family:var(--ff-score);text-transform:uppercase;font-weight:700;font-size:22px;margin:10px 0 2px}
-.chapter p{font-family:var(--ff-head);font-style:italic;color:var(--muted);margin:0;font-size:14.5px;max-width:58ch}
 .empty{padding:26px 0 0 122px;color:var(--muted);font-family:var(--ff-head);font-style:italic}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:6px 16px;flex-wrap:wrap}
 .linkbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:var(--red-ink);
@@ -123,7 +120,7 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   .when-col small{display:inline}
   .dot{display:none}
   .body-col{padding-top:4px;padding-left:0}
-  .gap,.chapter,.empty{padding-left:0}
+  .gap,.empty{padding-left:0}
   .band{grid-template-columns:34px 1fr;gap:4px 12px}
   .result{grid-column:2;justify-self:start;margin-top:7px}
   .after{text-align:left;min-width:0;display:flex;gap:6px;align-items:baseline}
@@ -149,8 +146,6 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
     <button type="button" class="linkbtn" id="allRead" hidden></button>
     <span id="stamp"></span>
     <span id="syncNote"></span>
-    <span>Games: NHL API</span>
-    <span id="credit"></span>
   </footer>
 </div>
 
@@ -317,12 +312,8 @@ function render(){
     for(var i=0;i<done.length && done[i].p.t <= a.p.t;i++) a.under = done[i];
   });
   var blocks = [];
-  var early = arts.filter(function(a){ return !a.under; });
-  if(early.length){
-    blocks.push({type:'chapter', h:'Offseason into camp',
-      s:'Nothing on the schedule yet — '+early.length+' stories filed before the first puck drop of the season.'});
-    early.forEach(function(a){ blocks.push({type:'story', a:a}); });
-  }
+  // stories from before the first game simply run on at the bottom, no heading
+  arts.filter(function(a){ return !a.under; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
   done.forEach(function(g, i){
     if(i > 0){
       var prevG = done[i-1];
@@ -337,9 +328,6 @@ function render(){
   blocks.reverse();                 // newest at the top
 
   document.getElementById('feed').innerHTML = blocks.map(function(b){
-    if(b.type === 'chapter')
-      return '<div class="row"><div class="chapter"><div class="lbl">Chapter</div><h2>'+esc(b.h)+
-        '</h2><p>'+esc(b.s)+'</p></div></div>';
     if(b.type === 'gap')
       return '<div class="row"><div class="gap"><span class="lbl">'+esc(b.text)+'</span><hr></div></div>';
     if(b.type === 'story'){
@@ -365,7 +353,6 @@ function render(){
   var newest = arts[arts.length-1];
   document.getElementById('stamp').textContent = newest ?
     'Newest story '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET' : 'No stories yet this season';
-  document.getElementById('credit').textContent = 'Stories: '+T.feed.source+' via siftrss';
 }
 
 // click, middle-click and the keyboard all open the link; any of them marks it read

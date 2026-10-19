@@ -49,7 +49,10 @@ generated summaries, which would need the paywalled article text).
 ## How a story finds its place
 
 Every story sits under the last finished game before it was filed (a line
-saying how long after was removed at Kyle's request, 2026-10-18). Gap labels between games count the stories filed in each break. Games carry the
+saying how long after was removed at Kyle's request, 2026-10-18). Gap labels between games count the stories filed in each break. Stories filed before
+the season's first game run on at the bottom with no heading (the "Offseason
+into camp" chapter was removed at Kyle's request, as were the footer's source
+credits). Games carry the
 record as it stood after them, so the standings move down the page with the
 stories. Preseason games show as `PS` and change no record.
 
