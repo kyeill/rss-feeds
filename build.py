@@ -82,7 +82,20 @@ def read_feed(url, since):
     return items
 
 
-def read_schedule(abbrev, season):
+def pick_tv(broadcasts, local_tv):
+    """One network per game, the one Kyle would turn to in Michigan: a US
+    national broadcast if there is one, otherwise the club's local channel.
+    NHL Network doesn't count as national -- its games stay on the local
+    channel too. A game with no broadcasts at all (some preseason) shows none."""
+    national = [
+        b["network"]
+        for b in sorted(broadcasts, key=lambda b: b.get("sequenceNumber", 0))
+        if b.get("market") == "N" and b.get("countryCode") == "US" and b.get("network") != "NHLN"
+    ]
+    return national[0] if national else (local_tv if broadcasts else "")
+
+
+def read_schedule(abbrev, season, local_tv):
     """The club's whole season: preseason, regular season, finished or not."""
     url = f"https://api-web.nhle.com/v1/club-schedule-season/{abbrev}/{season}"
     games = []
@@ -106,7 +119,7 @@ def read_schedule(abbrev, season):
                 "os": them.get("score"),
                 "last": (g.get("gameOutcome") or {}).get("lastPeriodType"),
                 "venue": g["venue"]["default"],
-                "tv": [b.get("network") for b in g.get("tvBroadcasts", []) if b.get("network")],
+                "tv": pick_tv(g.get("tvBroadcasts", []), local_tv),
             }
         )
     games.sort(key=lambda g: g["startUTC"] or g["date"])
@@ -123,29 +136,24 @@ def main():
     out = HERE / "docs"
     out.mkdir(exist_ok=True)
 
+    # One page, a tab per feed.
+    feeds = []
     for feed in CONFIG["feeds"]:
         articles = read_feed(feed["feed"], since)
-        games = read_schedule(feed["nhl"], season)
-        data = json.dumps(
-            {"articles": articles, "games": games},
-            ensure_ascii=False,
-            separators=(",", ":"),
-        )
-        page = (
-            template.replace("{{PLACE}}", feed["place"])
-            .replace("{{SHORT}}", feed["short"])
-            .replace("{{SOURCE}}", feed["source"])
-            .replace("{{SYNC}}", CONFIG.get("sync", ""))
-            .replace("{{DATA}}", data)
-        )
-        name = "index.html" if len(CONFIG["feeds"]) == 1 else f"{feed['slug']}.html"
-        (out / name).write_text(page, encoding="utf-8")
+        games = read_schedule(feed["nhl"], season, feed.get("localTv", ""))
+        feeds.append({k: feed[k] for k in ("slug", "short", "source")} | {"articles": articles, "games": games})
         played = [g for g in games if g["ds"] is not None and g["type"] == 2]
         print(
             f"{feed['short']}: {len(articles)} stories since {since}, "
-            f"{len(played)} of {len([g for g in games if g['type'] == 2])} games played "
-            f"-> docs/{name}"
+            f"{len(played)} of {len([g for g in games if g['type'] == 2])} games played"
         )
+    data = json.dumps(
+        {"sync": CONFIG.get("sync", ""), "feeds": feeds},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).replace("</", "<\\/")        # a headline can't close the <script> it sits in
+    (out / "index.html").write_text(template.replace("{{DATA}}", data), encoding="utf-8")
+    print("-> docs/index.html")
 
 
 if __name__ == "__main__":

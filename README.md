@@ -15,8 +15,8 @@ schedule for Detroit.
 
 | file | what it does |
 | --- | --- |
-| `config.json` | the feeds: name, source, NHL club, feed URL |
-| `build.py` | reads each feed and that club's season, writes `docs/` |
+| `config.json` | the read-list address, and the feeds: tab name, source, NHL club, local TV channel, feed URL |
+| `build.py` | reads each feed and that club's season, writes one page with a tab per feed |
 | `template.html` | the whole page — CSS and the script that lays out the timeline |
 | `docs/index.html` | the built page, committed, served by Pages from `main` |
 | `apps-script/` | the read-list web app the page syncs with (see below) |
@@ -28,26 +28,40 @@ python build.py
 No dependencies; standard library only. GitHub Actions runs the same command
 every three hours and commits `docs/` when the feed has moved.
 
+## The page
+
+A tab per feed across the top — **Red Wings (52)**, the number being unread
+stories; the count disappears at zero. The selected tab is the `#slug` in the
+address, so a tab can be bookmarked. Under it: record, points, the last-eight
+strip, the next game (opponent, time, arena, one TV network), then the timeline,
+newest first. There are no filters: every story and every game, preseason
+included.
+
+Kyle asked on 2026-10-18 for: no timing tags on stories, no filter row, no
+tagline, no trip or "then" commentary on Up next, `G#` game numbers, small
+`vs`/`at`, overtime and shootout losses grey like any loss, and one TV network
+per game. The Athletic's own teaser stays as the summary (he chose that over
+generated summaries, which would need the paywalled article text).
+
 ## How a story finds its place
 
-Every story is anchored to the last game that started before it was filed, and
-tagged by how long after:
+Every story sits under the last finished game before it was filed, with a small
+line saying how long after ("12h after vs SJS 4–3", "3 days after at MTL").
+Gap labels between games count the stories filed in each break. Games carry the
+record as it stood after them, so the standings move down the page with the
+stories. Preseason games show as `PS` and change no record.
 
-| tag | when |
-| --- | --- |
-| **Same night** | within 6 hours of puck drop |
-| **Next morning** | 6 to 26 hours after |
-| **Gameday** | filed on the day of a game, before it starts |
-| *(none)* | an off day — the gap says how many days |
-
-Games carry the record as it stood after them, so the standings move down the
-page with the stories. Preseason games show as `PS` and change no record.
+**TV:** a US national broadcast if the game has one (ESPN, ESPN+, TNT, ABC…),
+otherwise the feed's `localTv` (Detroit SportsNet). NHL Network doesn't count
+as national: its games stay on the local channel too. A game the API lists no
+broadcast for at all shows none.
 
 ## Read and unread
 
-Opening a story marks it read, and the mark follows Kyle to every device: the
-headline greys out and its dot on the spine empties. **Unread only** hides what
-he has read; **Mark all read** clears the backlog in one tap, after a confirm.
+Opening a story marks it read, and the mark follows Kyle to every device. An
+unread story's date is red; once read, the date and headline turn grey, and the
+tab's count drops. (An "Unread only" filter and a "Mark all read" button existed
+briefly and went with the filter row.)
 
 The page is static, so the list lives in an Apps Script web app,
 "RSS Feeds Read Sync", in Kyle's Google account (`apps-script/Code.js`, one
