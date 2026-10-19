@@ -1,0 +1,344 @@
+<title>{{SHORT}} Beat Timeline</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one dated spine down the page; games are weighted bands on it, and the beat writing sits in the gaps between them. */
+:root{
+  --ice:#f1f4f7; --card:#ffffff; --band:#fbfcfd;
+  --ink:#15181d; --muted:#616b78; --line:#d9e0e7; --line-soft:#e8edf1;
+  --red:#ce1126; --red-ink:#a60d1e; --win-wash:#fdf2f3;
+  --flag:#8a5a00; --loss:#78828f;
+  --ff-head:"Newsreader",Georgia,"Times New Roman",serif;
+  --ff-ui:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --ff-score:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ice:#0d1013; --card:#15191e; --band:#171c22;
+  --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
+  --red:#ff3047; --red-ink:#ff5d6e; --win-wash:#221316;
+  --flag:#d79b35; --loss:#6f7a87; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --ice:#0d1013; --card:#15191e; --band:#171c22;
+  --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
+  --red:#ff3047; --red-ink:#ff5d6e; --win-wash:#221316;
+  --flag:#d79b35; --loss:#6f7a87; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--ice);color:var(--ink);font-family:var(--ff-ui);font-size:15px;line-height:1.45;margin:0;padding:0 16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding-block:0 64px}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:2px}
+.lbl{font-family:var(--ff-ui);font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* masthead */
+header.mast{padding-block:30px 16px;border-bottom:2px solid var(--ink)}
+h1{font-family:var(--ff-score);font-weight:700;font-size:clamp(30px,7vw,46px);line-height:.95;text-transform:uppercase;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--red)}
+.srcline{font-family:var(--ff-head);font-size:15px;color:var(--muted);font-style:italic;margin:6px 0 0}
+.standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
+.rec{display:flex;align-items:baseline;gap:8px}
+.rec b{font-family:var(--ff-score);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.form{display:flex;gap:3px;align-items:flex-end}
+.form i{width:14px;height:22px;border-radius:2px;display:block;border:1px solid transparent}
+.form i.w{background:var(--red)}
+.form i.otl{background:transparent;border-color:var(--flag)}
+.form i.l{background:var(--line);border-color:var(--line)}
+
+/* controls */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--ice);
+  padding-block:10px;border-bottom:1px solid var(--line);display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--card)}
+.seg button{appearance:none;background:none;border:0;border-right:1px solid var(--line);cursor:pointer;
+  font-family:var(--ff-ui);font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);padding:7px 11px;display:flex;gap:6px;align-items:center}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--red);color:#fff;border-right-color:var(--red)}
+.seg button span{font-variant-numeric:tabular-nums;opacity:.7;font-weight:500}
+.tog{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted)}
+.tog input{accent-color:var(--red);margin:0;width:15px;height:15px}
+
+/* up next */
+.next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--red);border-radius:3px;background:var(--card);padding:16px 18px}
+.next .trip{color:var(--red-ink)}
+.next h2{font-family:var(--ff-score);text-transform:uppercase;font-weight:700;font-size:26px;line-height:1.05;margin:7px 0 4px}
+.next .when{font-family:var(--ff-ui);font-size:13.5px;color:var(--muted)}
+.next .tv{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap}
+.tv b{font-family:var(--ff-ui);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);
+  border-radius:2px;padding:2px 6px;color:var(--muted)}
+
+/* the spine */
+.feed{position:relative;margin-top:8px}
+.feed::before{content:"";position:absolute;left:96px;top:0;bottom:34px;width:1px;background:var(--line);z-index:0}
+.row{position:relative;display:grid;grid-template-columns:96px 1fr;z-index:1}
+.when-col{text-align:right;padding:16px 26px 0 0;position:relative}
+.when-col time{display:block;font-family:var(--ff-score);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-variant-numeric:tabular-nums}
+.when-col small{display:block;font-size:10.5px;color:var(--muted);opacity:.85;font-variant-numeric:tabular-nums}
+.dot{position:absolute;right:-5px;top:20px;width:9px;height:9px;border-radius:50%;background:var(--ice);border:1.5px solid var(--line)}
+.row.game .dot{width:13px;height:13px;right:-7px;top:18px;background:var(--red);border-color:var(--red)}
+.row.game.pre .dot{background:var(--ice);border-color:var(--muted)}
+.body-col{padding:12px 0;min-width:0}
+
+/* story */
+.story{display:block;padding:5px 0 13px;border-bottom:1px solid var(--line-soft)}
+.story:hover h3{color:var(--red-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.story .tags{display:flex;gap:8px;align-items:center;margin-bottom:3px;flex-wrap:wrap}
+.tag{font-family:var(--ff-ui);font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 5px;border-radius:2px}
+.tag.post{background:var(--red);color:#fff}
+.tag.day{border:1px solid var(--flag);color:var(--flag)}
+.rel{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.story h3{font-family:var(--ff-head);font-weight:500;font-size:19.5px;line-height:1.26;margin:0;text-wrap:balance}
+.story p{font-family:var(--ff-head);font-size:14.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;max-width:62ch}
+
+/* game band */
+.row.game .body-col{padding:9px 0}
+.band{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:0 16px;
+  background:var(--band);border:1px solid var(--line);border-radius:3px;padding:11px 14px}
+.row.game.win .band{background:var(--win-wash);border-color:var(--red)}
+.gno{font-family:var(--ff-score);font-weight:700;font-size:17px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.row.game.win .gno{color:var(--red)}
+.matchup{min-width:0}
+.matchup .opp{font-family:var(--ff-score);font-weight:700;font-size:23px;line-height:1.08;text-transform:uppercase}
+.matchup .opp i{font-style:normal;color:var(--muted);font-weight:600}
+.matchup .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.result{display:flex;align-items:center;gap:12px;justify-self:end}
+.sc{font-family:var(--ff-score);font-weight:700;font-size:28px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sc s{text-decoration:none;color:var(--muted);font-weight:600;padding:0 1px}
+.pill{font-family:var(--ff-ui);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;padding:4px 7px;white-space:nowrap}
+.pill.w{background:var(--red);color:#fff}
+.pill.otl{border:1px solid var(--flag);color:var(--flag)}
+.pill.l{border:1px solid var(--loss);color:var(--loss)}
+.after{text-align:right;min-width:62px}
+.after b{display:block;font-family:var(--ff-score);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
+.after small{display:block;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* gaps and chapter rules */
+.gap{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px 0 10px 122px}
+.gap hr{flex:1;height:0;border:0;border-top:1px solid var(--line-soft);min-width:12px}
+.chapter{grid-column:1/-1;padding:30px 0 6px 122px;border-top:1px solid var(--line);margin-top:22px}
+.chapter h2{font-family:var(--ff-score);text-transform:uppercase;font-weight:700;font-size:22px;margin:10px 0 2px}
+.chapter p{font-family:var(--ff-head);font-style:italic;color:var(--muted);margin:0;font-size:14.5px;max-width:58ch}
+.empty{padding:26px 0 0 122px;color:var(--muted);font-family:var(--ff-head);font-style:italic}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:6px 16px;flex-wrap:wrap}
+
+@media (max-width:620px){
+  .feed::before{display:none}
+  .row{grid-template-columns:1fr}
+  .when-col{text-align:left;padding:14px 0 0;display:flex;gap:8px;align-items:baseline}
+  .when-col small{display:inline}
+  .dot,.row.game .dot{display:none}
+  .body-col{padding-top:4px}
+  .gap,.chapter,.empty{padding-left:0}
+  .band{grid-template-columns:26px 1fr;gap:4px 12px}
+  .result{grid-column:2;justify-self:start;margin-top:7px}
+  .after{text-align:left;min-width:0;display:flex;gap:6px;align-items:baseline}
+  .story h3{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>{{PLACE}} <em>{{SHORT}}</em></h1>
+    <p class="srcline">{{SOURCE}}&rsquo;s beat, read against the schedule</p>
+    <div class="standing">
+      <div class="rec"><b id="recNum">&mdash;</b><span class="lbl" id="recNote">record</span></div>
+      <div class="rec"><b id="ptsNum">&mdash;</b><span class="lbl">points</span></div>
+      <div>
+        <div class="form" id="form"></div>
+        <div class="lbl" style="margin-top:5px">last 8 &middot; oldest left</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Filter stories">
+      <button type="button" data-filter="all" aria-pressed="true">All stories <span id="cAll"></span></button>
+      <button type="button" data-filter="post" aria-pressed="false">Game reads <span id="cPost"></span></button>
+      <button type="button" data-filter="off" aria-pressed="false">Off days <span id="cOff"></span></button>
+    </div>
+    <label class="tog"><input type="checkbox" id="hidePre"> Hide preseason</label>
+    <label class="tog"><input type="checkbox" id="oldest"> Oldest first</label>
+  </div>
+
+  <section class="next" id="next"></section>
+  <div class="feed" id="feed"></div>
+
+  <footer>
+    <span id="stamp"></span>
+    <span>Games: NHL API</span>
+    <span>Stories: The Athletic via siftrss</span>
+  </footer>
+</div>
+
+<script type="application/json" id="data">{{DATA}}</script>
+<script>
+(function(){
+"use strict";
+var D = JSON.parse(document.getElementById('data').textContent);
+var TZ = 'America/Detroit';
+var MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function parts(iso){
+  var d = new Date(iso);
+  var f = new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric',month:'numeric',day:'numeric',
+    hour:'numeric',minute:'2-digit',weekday:'short',hour12:true});
+  var o = {};
+  f.formatToParts(d).forEach(function(p){ o[p.type] = p.value; });
+  return {t:d.getTime(), wd:o.weekday, mon:MONTH[+o.month-1], day:+o.day,
+          time:o.hour+':'+o.minute+' '+String(o.dayPeriod||'').toLowerCase(),
+          key:o.year+'-'+String(o.month).padStart(2,'0')+'-'+String(o.day).padStart(2,'0')};
+}
+function dayDiff(a,b){ return Math.round((new Date(b.key) - new Date(a.key))/864e5); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+/* games: order, running record, result shape */
+var games = D.games.slice().sort(function(a,b){
+  return (a.startUTC||a.date) < (b.startUTC||b.date) ? -1 : 1; });
+var w=0,l=0,o=0,n=0,played=[];
+games.forEach(function(g){
+  g.p = parts(g.startUTC || g.date+'T23:00:00Z');
+  g.pre = g.type === 1;
+  g.done = g.ds !== null && g.ds !== undefined;
+  g.tvList = (g.tv||[]).filter(Boolean);
+  if(!g.done) return;
+  g.won = g.ds > g.os;
+  g.ot = g.last === 'OT' || g.last === 'SO';
+  g.pill = g.won ? ('W' + (g.ot ? ' '+g.last : '')) : (g.ot ? 'L '+g.last : 'L');
+  g.cls = g.won ? 'w' : (g.ot ? 'otl' : 'l');
+  if(g.pre){ g.gno = 'PS'; return; }
+  n++; g.gno = n < 10 ? '0'+n : ''+n;
+  if(g.won) w++; else if(g.ot) o++; else l++;
+  g.rec = w+'-'+l+'-'+o; g.pts = w*2 + o;
+  played.push(g);
+});
+var nreg = n;
+games.forEach(function(g){ if(!g.done && !g.pre){ nreg++; g.gno = nreg < 10 ? '0'+nreg : ''+nreg; } });
+
+var last = played[played.length-1];
+document.getElementById('recNum').textContent = last ? last.rec : '0-0-0';
+document.getElementById('recNote').textContent = played.length + ' games played';
+document.getElementById('ptsNum').textContent = last ? last.pts : 0;
+document.getElementById('form').innerHTML = played.slice(-8).map(function(g){
+  return '<i class="'+g.cls+'" title="'+esc((g.home?'vs ':'at ')+g.opp+' '+g.ds+'-'+g.os+' '+g.pill)+'"></i>';
+}).join('');
+
+/* up next, with the length of the trip it starts */
+var up = games.filter(function(g){ return !g.done; });
+if(up.length){
+  var g0 = up[0], trip = 0;
+  for(var i=0;i<up.length;i++){ if(up[i].home) break; trip++; }
+  var days = Math.max(0, dayDiff(parts(new Date().toISOString()), g0.p));
+  var tripline = trip >= 3 ? trip+'-game road trip starts here' : (g0.home ? 'Home ice' : 'On the road');
+  document.getElementById('next').innerHTML =
+    '<div class="lbl trip">Up next &middot; '+esc(tripline)+'</div>'+
+    '<h2>'+(g0.home?'vs ':'at ')+esc(g0.oppPlace+' '+g0.oppName)+'</h2>'+
+    '<div class="when num">'+g0.p.wd+', '+g0.p.mon+' '+g0.p.day+' &middot; '+g0.p.time+' ET &middot; '+
+      esc(g0.venue)+' &middot; '+(days===0?'tonight':days===1?'tomorrow':'in '+days+' days')+'</div>'+
+    '<div class="tv">'+g0.tvList.map(function(t){ return '<b>'+esc(t)+'</b>'; }).join('')+'</div>'+
+    '<div class="when num" style="margin-top:9px">Then '+up.slice(1,4).map(function(g){
+      return (g.home?'vs ':'at ')+g.opp+' '+g.p.mon+' '+g.p.day; }).join(' &middot; ')+'</div>';
+}
+
+/* stories: anchor each one to the game it follows */
+var arts = D.articles.slice().sort(function(a,b){ return a.iso < b.iso ? -1 : 1; });
+arts.forEach(function(a){
+  a.p = parts(a.iso);
+  var prev = null, nxt = null;
+  for(var i=0;i<games.length;i++){
+    if(games[i].p.t <= a.p.t) prev = games[i]; else { nxt = games[i]; break; }
+  }
+  a.prev = prev; a.nxt = nxt;
+  var hrs = prev ? (a.p.t - prev.p.t)/36e5 : null;
+  a.post = hrs !== null && hrs <= 26 && prev.done;
+  a.tagText = a.post ? (hrs <= 6 ? 'Same night' : 'Next morning') : '';
+  a.gameday = !a.post && nxt && nxt.p.key === a.p.key;
+  a.kind = a.post ? 'post' : 'off';
+  if(a.post){
+    a.rel = Math.round(hrs)+'h after '+(prev.home?'vs ':'at ')+prev.opp+' '+prev.ds+'–'+prev.os;
+  } else if(prev){
+    var dd = dayDiff(prev.p, a.p);
+    a.rel = (dd<=1 ? 'day after ' : dd+' days after ')+(prev.home?'vs ':'at ')+prev.opp;
+  } else {
+    a.rel = 'before the first puck drop';
+  }
+});
+
+/* assemble: each game, then the stories filed before the next one */
+function build(){
+  var filter = document.querySelector('.seg [aria-pressed="true"]').dataset.filter;
+  var hidePre = document.getElementById('hidePre').checked;
+  var oldestFirst = document.getElementById('oldest').checked;
+  var shown = arts.filter(function(a){ return filter === 'all' || a.kind === filter; });
+  var blocks = [];
+  var early = shown.filter(function(a){ return !a.prev; });
+
+  if(early.length){
+    blocks.push({type:'chapter', h:'Offseason into camp',
+      s:'Nothing on the schedule yet — '+early.length+' stories filed before the first puck drop of the season.'});
+    early.forEach(function(a){ blocks.push({type:'story', a:a}); });
+  }
+  var visible = games.filter(function(g){ return g.done && !(hidePre && g.pre); });
+  visible.forEach(function(g, i){
+    if(i > 0){
+      var prevG = visible[i-1];
+      var dd = dayDiff(prevG.p, g.p);
+      var cnt = shown.filter(function(a){ return a.prev === prevG; }).length;
+      blocks.push({type:'gap', text:(dd <= 1 ? 'Back-to-back' : dd+' days between games') +
+        (cnt ? ' · '+cnt+' stor'+(cnt===1?'y':'ies') : ' · nothing filed')});
+    }
+    blocks.push({type:'game', g:g});
+    shown.filter(function(a){ return a.prev === g; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
+  });
+  if(!oldestFirst) blocks.reverse();
+
+  document.getElementById('feed').innerHTML = blocks.map(function(b){
+    if(b.type === 'chapter')
+      return '<div class="row"><div class="chapter"><div class="lbl">Chapter</div><h2>'+esc(b.h)+
+        '</h2><p>'+esc(b.s)+'</p></div></div>';
+    if(b.type === 'gap')
+      return '<div class="row"><div class="gap"><span class="lbl">'+esc(b.text)+'</span><hr></div></div>';
+    if(b.type === 'story'){
+      var a = b.a;
+      return '<div class="row"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
+        '</time><small>'+esc(a.p.time)+'</small><span class="dot"></span></div>'+
+        '<div class="body-col"><a class="story" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
+        '<span class="tags">'+(a.post?'<span class="tag post">'+esc(a.tagText)+'</span>':'')+
+          (a.gameday?'<span class="tag day">Gameday</span>':'')+
+          '<span class="rel">'+esc(a.rel)+'</span></span>'+
+        '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a></div></div>';
+    }
+    var g = b.g;
+    return '<div class="row game '+(g.won?'win ':'')+(g.pre?'pre ':'')+'"><div class="when-col">'+
+      '<time datetime="'+esc(g.date)+'">'+g.p.mon+' '+g.p.day+'</time><small>'+g.p.wd+'</small>'+
+      '<span class="dot"></span></div><div class="body-col"><div class="band">'+
+      '<div class="gno">'+esc(g.gno)+'</div>'+
+      '<div class="matchup"><div class="opp"><i>'+(g.home?'vs':'at')+'</i> '+esc(g.oppPlace+' '+g.oppName)+'</div>'+
+      '<div class="meta">'+(g.pre?'Preseason &middot; ':'')+esc(g.venue)+
+        (g.tvList.length ? ' &middot; '+esc(g.tvList.slice(0,2).join(', ')) : '')+'</div></div>'+
+      '<div class="result"><span class="sc">'+g.ds+' <s>&ndash;</s> '+g.os+'</span>'+
+      '<span class="pill '+g.cls+'">'+esc(g.pill)+'</span>'+
+      (g.rec ? '<span class="after"><b>'+g.rec+'</b><small>record</small></span>' : '')+
+      '</div></div></div></div>';
+  }).join('') || '<div class="row"><p class="empty">No stories match this filter.</p></div>';
+}
+
+document.querySelectorAll('.seg button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.seg button').forEach(function(b){
+      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+    build();
+  });
+});
+document.getElementById('hidePre').addEventListener('change', build);
+document.getElementById('oldest').addEventListener('change', build);
+document.getElementById('cAll').textContent = arts.length;
+document.getElementById('cPost').textContent = arts.filter(function(a){ return a.kind === 'post'; }).length;
+document.getElementById('cOff').textContent = arts.filter(function(a){ return a.kind === 'off'; }).length;
+var newest = arts[arts.length-1];
+document.getElementById('stamp').textContent = 'Feed read '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET';
+build();
+})();
+</script>

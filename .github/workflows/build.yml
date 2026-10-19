@@ -1,0 +1,51 @@
+name: Build
+
+# EVERY THREE HOURS, AND EVERY RUN REBUILDS.
+#
+# soccer-history and games-history guard their cron so the site is built once
+# a day: their sources are thirteen years of finished games, and a second
+# build would only burn a runner. This one is the opposite. It is a news feed
+# -- the recap of a 7pm game lands near midnight, the morning column lands at
+# 6am -- so a page built once a day is stale most of the day, and there is no
+# guard here on purpose.
+#
+# Both sources are small (one RSS document, one schedule endpoint), so a run
+# costs a few seconds and there is nothing to cache between runs.
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:          # the Run workflow button, any time
+
+permissions:
+  contents: write             # the job commits the rebuilt page
+
+concurrency:
+  group: build
+  cancel-in-progress: false   # never let two builds race to push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # build.py uses the standard library only -- nothing to install.
+      - name: Build the page
+        run: python build.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "rss-feeds bot"
+          git config user.email "actions@github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "nothing new in the feed"
+            exit 0
+          fi
+          git commit -m "Build $(TZ=America/New_York date '+%Y-%m-%d %H:%M %Z')"
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main

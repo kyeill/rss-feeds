@@ -1,0 +1,12 @@
+{
+  "feeds": [
+    {
+      "slug": "redwings",
+      "place": "Detroit",
+      "short": "Red Wings",
+      "source": "The Athletic",
+      "nhl": "DET",
+      "feed": "https://siftrss.com/f/Jz69b6rknd9"
+    }
+  ]
+}
