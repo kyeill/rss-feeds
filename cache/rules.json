@@ -204,5 +204,22 @@
    "atlanta",
    "the verdict"
   ]
+ },
+ {
+  "team": "The Athletic",
+  "teaser": false,
+  "hide": [
+   "*"
+  ],
+  "unless": [
+   "michigan",
+   "wolverines",
+   "underwood",
+   "sherrone",
+   "dusty may",
+   "big house",
+   "crisler",
+   "ann arbor"
+  ]
  }
 ]
