@@ -251,7 +251,7 @@ function merge(ids){
   ids.forEach(function(id){ if(!read.has(id)){ read.add(id); changed = true; } });
   save('rssf:read', read);
   if(changed) render(); else tabs();
-  note('Read list synced');
+  note('Read list synced '+parts(new Date().toISOString()).time);
 }
 function push(){
   if(!SYNC || pushing || !pending.size) return;
@@ -269,9 +269,12 @@ function push(){
     })
     .catch(function(){ pushing = false; note(OFFLINE); });
 }
+var pulling = false, pulledAt = 0;
 function pull(){
   if(!SYNC){ note('Read list kept on this device only'); return; }
-  fetch(SYNC + '?op=get')
+  if(pulling || Date.now() - pulledAt < 5000) return;   // several wake-up signals can arrive at once
+  pulling = true; pulledAt = Date.now();
+  fetch(SYNC + '?op=get', {cache:'no-store'})
     .then(function(r){ return r.json(); })
     .then(function(j){
       if(!j.ok) throw new Error(j.error);
@@ -282,7 +285,8 @@ function pull(){
       merge(j.read);
       push();
     })
-    .catch(function(){ note(OFFLINE); });
+    .catch(function(){ note(OFFLINE); })
+    .then(function(){ pulling = false; });
 }
 
 /* which team is showing: the #slug in the address if there is one, else the
@@ -428,7 +432,14 @@ document.getElementById('tabs').addEventListener('click', function(e){
 });
 window.addEventListener('hashchange', function(){ pick(); render(); });
 // back from another app or tab: pick up whatever was read on the other device
-document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') pull(); });
+// Phones often resume a page from memory rather than reloading it, and don't all say
+// so the same way, so listen for every signal -- and check every two minutes while open.
+function wake(){ if(document.visibilityState === 'visible') pull(); }
+document.addEventListener('visibilitychange', wake);
+window.addEventListener('pageshow', wake);
+window.addEventListener('focus', wake);
+window.addEventListener('online', function(){ pulledAt = 0; wake(); });
+setInterval(wake, 120000);
 
 pick();
 render();

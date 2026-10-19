@@ -150,8 +150,12 @@ Script Property per story id). Its `/exec` address is `sync` in `config.json`;
 `build.py` writes it into the page. Each browser also keeps a copy in
 `localStorage`, so marks show at once and survive a dropped connection; any
 mark the server hasn't acknowledged is retried on the next load. The page
-re-reads the list whenever it comes back to the foreground. The footer says
-whether the last sync worked.
+re-reads the list on every sign it is back in front (visibilitychange,
+pageshow, focus, coming back online) and every two minutes while open —
+phones often resume a page from memory without reloading it, and Kyle saw
+marks from his computer not reaching his phone (2026-10-18) when only
+visibilitychange was used. The footer says "Read list synced 10:35 pm" with
+the time of the last successful sync.
 
 Story ids are The Athletic's article number from the link (`/athletic/7699924/`),
 or a 12-character hash for any other source.
