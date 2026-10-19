@@ -17,7 +17,8 @@
           "label": "MGoBlog",
           "feed": "https://mgoblog.com/fbfeed",
           "archive": true,
-          "sport": "other"
+          "sport": "other",
+          "feedly": true
         }
       ]
     },
@@ -41,7 +42,8 @@
           "label": "MGoBlog",
           "feed": "https://mgoblog.com/fbfeed",
           "archive": true,
-          "sport": "basketball"
+          "sport": "basketball",
+          "feedly": true
         }
       ]
     },
@@ -56,7 +58,8 @@
           "label": "MGoBlog",
           "feed": "https://mgoblog.com/fbfeed",
           "archive": true,
-          "sport": "hockey"
+          "sport": "hockey",
+          "feedly": true
         }
       ]
     },

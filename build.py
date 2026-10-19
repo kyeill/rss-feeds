@@ -26,6 +26,7 @@ import re
 import pathlib
 import datetime as dt
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = pathlib.Path(__file__).parent
@@ -34,9 +35,19 @@ UA = {"User-Agent": "rss-feeds build (github.com/kyeill/rss-feeds)"}
 
 
 def fetch(url):
+    """One retry after a timeout or dropped connection: the build makes ~40
+    requests an hour, and one slow answer shouldn't fail it (and email Kyle).
+    An HTTP error (403, 404, 500) is an answer, not a hiccup, and isn't retried."""
     req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=45) as r:
-        return r.read().decode("utf-8", "replace")
+    for attempt in (1, 2):
+        try:
+            with urllib.request.urlopen(req, timeout=45) as r:
+                return r.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError:
+            raise
+        except (TimeoutError, urllib.error.URLError, ConnectionError):
+            if attempt == 2:
+                raise
 
 
 def story_id(link):
@@ -115,6 +126,30 @@ def read_wordpress(site, since):
     return items
 
 
+def read_feedly(feed_url):
+    """The newest 50 posts Feedly holds for a feed, from its public stream API.
+
+    MGoBlog's own feed keeps only its newest 10 posts (about four days), and
+    its robots.txt turns away AI agents (ClaudeBot, ChatGPT-User), so its
+    article pages are not crawled for history. Feedly -- Kyle's own reader --
+    keeps what the feed has carried, full text included, and serves 50 without
+    a login: about three weeks. Merged into the archive on every build, so a
+    run of missed builds can't lose a post either."""
+    url = ("https://cloud.feedly.com/v3/streams/contents?count=50&streamId="
+           + urllib.parse.quote("feed/" + feed_url, safe=""))
+    items = []
+    for it in json.loads(fetch(url)).get("items", []):
+        link = ((it.get("alternate") or [{}])[0]).get("href") or it.get("originId") or ""
+        if not link.startswith("http"):
+            continue
+        title = plain(it.get("title") or "")
+        body = (it.get("content") or it.get("summary") or {}).get("content", "")
+        when = dt.datetime.fromtimestamp(it["published"] / 1000, dt.timezone.utc)
+        items.append({"id": story_id(link), "title": title, "dek": teaser(title, plain(body)),
+                      "link": link, "iso": when.isoformat(), "_text": plain(body)})
+    return items
+
+
 def plain(markup):
     """Markup to one line of text."""
     text = html.unescape(re.sub(r"<[^>]+>", " ", markup))
@@ -145,7 +180,8 @@ RULES_CACHE = HERE / "cache" / "rules.json"
 
 BASKETBALL = re.compile(r"basketball|hoops|rebound|three-pointer|3-pointer|\bthrees\b|free throw|layup|dunk|kenpom|"
                         r"torvik|crisler|sweet 16|elite eight|final four|point guard|\bwbb\b|jumper|and-one|\bpaint\b|"
-                        r"backcourt|frontcourt|shot clock|\bbpi\b")
+                        r"backcourt|frontcourt|shot clock|\bbpi\b|pick-and-roll|pick and roll|\brim\b|big man|"
+                        r"ball screen|boynton|\bppg\b|\brpg\b|post-up")
 FOOTBALL = re.compile(r"football|touchdown|quarterback|\bqb\b|\byards\b|rushing|passing game|\bsack|linebacker|"
                       r"cornerback|\bpunt|field goal|offensive line|defensive line|big house|tailback|receiver|"
                       r"interception|fumble|first down|play-action|\bsnap|line of scrimmage|end zone")
@@ -156,18 +192,25 @@ def sport_of(title, text):
     """Which section an MGoBlog post belongs to: "basketball", "hockey" or
     "other" (football and everything else -- podcasts, mixed posts, other
     sports). Its feed has no categories, but it carries the whole post, so this
-    counts terms only one sport uses. A post is basketball or hockey when it
-    has some of that sport's terms (a "Hoops"/"WBB" or "Hockey" headline counts
-    double) and next to none of the others'. Hockey and basketball share
-    "rebound" and "paint", so each tolerates a few of the other's.
-    Checked on 21 posts on 2026-10-19: hoops previews and recaps, a women's
-    basketball preview and "Exit Dusty May" to basketball; hockey game posts and
-    previews to hockey; football recaps, the mixed mailbag, podcasts and softball
-    to other."""
+    counts terms only one sport uses. MGoBlog names its series consistently
+    ("Michigan Hockey Game #6", "Michigan HockeyCast", "Hoops Preview", "WBB"),
+    and a headline beats the text -- Feedly's copy of some posts carries other
+    posts' text along -- so such a headline decides first. Otherwise a post is
+    basketball or hockey when it has some of that sport's terms and next to
+    none of the others' (hockey and basketball share "rebound" and "paint", so
+    each tolerates a stray one). Checked on 21 page samples and Feedly's 50
+    posts on 2026-10-19; the one known miss is a basketball "Portal Hello" whose
+    text names no basketball terms at all, which lands in Football."""
     t = (title + " " + text).lower()
     head = title.lower()
-    bb = len(BASKETBALL.findall(t)) + (10 if re.match(r"(hoops|wbb|basketball)\b", head) else 0)
-    hk = len(HOCKEY.findall(t)) + (10 if re.match(r"(michigan hockey|hockey)\b", head) else 0)
+    if re.search(r"michigan hockey|^hockey\b|hockey preview|hockeycast", head):
+        return "hockey"
+    # anchored at the start: "Hoops Preview:", "WBB Preview:" -- a mailbag that "Talks
+    # Coaches, Blame, Hoops, and Hockey" mid-headline is a mixed post
+    if re.search(r"^(hoops|wbb)\b|^michigan (men's |women's )?basketball|hoops preview|wbb preview", head):
+        return "basketball"
+    bb = len(BASKETBALL.findall(t))
+    hk = len(HOCKEY.findall(t))
     fb = len(FOOTBALL.findall(t))
     if bb >= 3 and fb <= bb * 0.15 and hk <= max(1, bb * 0.2):   # one stray mention allowed
         return "basketball"
@@ -214,6 +257,11 @@ def gather(sources, league, include=()):
             # one source down shouldn't blank a section; an archived one keeps what it had
             print(f"  ! {src['label']} unreadable ({err}); skipped this run")
             items = []
+        if src.get("feedly"):
+            try:
+                items += read_feedly(src["feed"])
+            except Exception as err:
+                print(f"  ! Feedly's copy of {src['label']} unreadable ({err})")
         if src.get("archive"):
             items = [a for a in remembered(src, items) if a["iso"][:10] >= since]
         for a in items:
