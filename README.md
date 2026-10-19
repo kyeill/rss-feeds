@@ -95,7 +95,10 @@ season all winter), so a table whose games played disagree with the schedule's
 shows "—" for place and gap; odds still show when they are this season's.
 NFL times not yet set read "Time TBD".
 
-The last tab opened is remembered per browser; `#slug` in the address wins.
+The last tab opened is remembered per browser; `#slug` in the address wins. On a phone, a quick sideways swipe below
+the tabs moves to the next or previous team (a stroke must travel 60px, at
+least twice as far sideways as down, within 0.7s — so scrolling never changes
+team); the tab row keeps its own sideways scroll.
 
 **Colours:** each tab wears its team's colour, Kyle's picks (2026-10-18): Tigers
 orange, Lions blue, Pistons teal, Cavaliers gold, Red Wings red. They are CSS

@@ -148,6 +148,10 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   .after{text-align:left;min-width:0;display:flex;gap:6px;align-items:baseline}
   .story h3{font-size:18px}
 }
+@keyframes in-right{from{transform:translateX(28px);opacity:.35}to{transform:none;opacity:1}}
+@keyframes in-left{from{transform:translateX(-28px);opacity:.35}to{transform:none;opacity:1}}
+#body.in-right{animation:in-right .18s ease-out}
+#body.in-left{animation:in-left .18s ease-out}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -155,6 +159,7 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 <div class="wrap">
   <header class="tabs" role="tablist" aria-label="Teams" id="tabs"></header>
 
+  <div id="body">
   <div class="standing">
     <div class="rec"><b id="placeNum">&mdash;</b><span class="lbl" id="placeNote">division</span></div>
     <div class="rec"><b id="gapNum">&mdash;</b><span class="lbl" id="gapNote">playoff spot</span></div>
@@ -163,6 +168,7 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 
   <section class="next" id="next"></section>
   <div class="feed" id="feed" role="tabpanel"></div>
+  </div>
 
   <footer>
     <button type="button" class="linkbtn" id="allRead" hidden></button>
@@ -421,15 +427,41 @@ document.getElementById('allRead').addEventListener('click', function(){
   var ids = unreadIds();
   if(ids.length && confirm('Mark all '+ids.length+' '+TEAMS[cur].feed.short+' stories as read?')){ markRead(ids); render(); }
 });
-document.getElementById('tabs').addEventListener('click', function(e){
-  var b = e.target.closest('button[data-i]');
-  if(!b) return;
-  cur = +b.dataset.i;
+function go(i, from){
+  if(i < 0 || i >= TEAMS.length || i === cur) return;
+  cur = i;
   history.replaceState(null, '', '#'+TEAMS[cur].feed.slug);
   try{ localStorage.setItem('rssf:tab', TEAMS[cur].feed.slug); }catch(e){}
   render();
   window.scrollTo(0, 0);
+  if(from){                                   // a swipe slides the new team in from that side
+    var body = document.getElementById('body');
+    body.classList.remove('in-left', 'in-right');
+    void body.offsetWidth;
+    body.classList.add(from === 'right' ? 'in-right' : 'in-left');
+  }
+}
+document.getElementById('tabs').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-i]');
+  if(b) go(+b.dataset.i);
 });
+
+// swipe left or right anywhere below the tabs for the next or previous team. Only a
+// quick, clearly sideways stroke counts, so scrolling the feed never changes team; the
+// tab row keeps its own sideways scroll.
+var touch = null;
+document.addEventListener('touchstart', function(e){
+  touch = e.touches.length === 1 && !e.target.closest('#tabs')
+    ? {x:e.touches[0].clientX, y:e.touches[0].clientY, t:Date.now()} : null;
+}, {passive:true});
+document.addEventListener('touchend', function(e){
+  if(!touch) return;
+  var dx = e.changedTouches[0].clientX - touch.x, dy = e.changedTouches[0].clientY - touch.y;
+  var quick = Date.now() - touch.t < 700;
+  touch = null;
+  if(quick && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy))
+    go(cur + (dx < 0 ? 1 : -1), dx < 0 ? 'right' : 'left');
+}, {passive:true});
 window.addEventListener('hashchange', function(){ pick(); render(); });
 // back from another app or tab: pick up whatever was read on the other device
 // Phones often resume a page from memory rather than reloading it, and don't all say
