@@ -22,6 +22,8 @@ basketball use ESPN's.
 | `template.html` | the whole page — CSS and the script that lays out the timeline |
 | `docs/index.html` | the built page, committed, served by Pages from `main` |
 | `apps-script/` | the read-list web app the page syncs with (see below) |
+| `icons.py` | draws the app icons into `docs/` (run by hand when the mark changes) |
+| `docs/manifest.webmanifest`, `docs/sw.js` | make it installable on a phone; hand-written, not built |
 
 ```bash
 python build.py
@@ -113,6 +115,26 @@ League Pass, then the team's own home/away listing (the Tigers' is
 "Tigers.TV"), then `localTv`: **TV20 Detroit** for the Pistons and **DAZN** for
 the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
 none — every NFL game has a network.
+
+## Icon and install
+
+The mark is the page itself: a spine with one dot per team, in tab order and
+team colour, each beside a headline bar. `python icons.py` draws it (no image
+library on this PC, so it is pixel maths with 4x4 supersampling):
+
+- `icon-192.png`, `icon-512.png` — full-bleed, `purpose: any maskable`. The
+  mark stays inside the 0.4-radius safe circle, so Android launchers can cut
+  it to any shape (the "adaptive icon").
+- `icon-mono-512.png` — white on transparent, `purpose: monochrome`, for
+  Android 13+ themed icons that recolour to the wallpaper.
+- `icon-180.png` — iPhone home screen, the mark 25% larger since iOS only
+  rounds the corners.
+- The browser-tab icon is an SVG the page draws itself: one dot in the OPEN
+  tab's colour plus three bars, which is what still reads at 16px.
+
+`sw.js` caches only the shell: the page is always fetched fresh and the cached
+copy is the offline fallback. Icons are served cache-first, so if they change,
+bump `CACHE` in `sw.js`.
 
 ## Read and unread
 

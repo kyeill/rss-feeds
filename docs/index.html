@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>RSS Feeds</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" id="favicon">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="RSS Feeds">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f1f4f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1013" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -57,10 +64,10 @@ a{color:inherit;text-decoration:none}
 
 /* team tabs */
 header.tabs{position:sticky;top:0;z-index:6;background:var(--ice);border-bottom:2px solid var(--ink);
-  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}
+  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:18px;overflow-x:auto;scrollbar-width:none}
 header.tabs::-webkit-scrollbar{display:none}
 .tabs button{appearance:none;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;cursor:pointer;
-  font-family:var(--ff-score);font-weight:700;font-size:clamp(22px,5.4vw,28px);line-height:1;text-transform:uppercase;
+  font-family:var(--ff-score);font-weight:700;font-size:clamp(17px,4.4vw,21px);line-height:1;text-transform:uppercase;
   color:var(--muted);padding:6px 0 9px;white-space:nowrap}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .tabs button span{font-variant-numeric:tabular-nums;color:var(--accent-ink);font-weight:600}
@@ -131,6 +138,7 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 .linkbtn[hidden]{display:none}
 
 @media (max-width:620px){
+  header.tabs{gap:13px}
   .feed::before{display:none}
   .row{grid-template-columns:1fr}
   .when-col{text-align:left;padding:14px 0 0;display:flex;gap:8px;align-items:baseline}
@@ -307,9 +315,26 @@ function unreadIds(){
   return TEAMS[cur].arts.filter(function(a){ return !read.has(a.id); }).map(function(a){ return a.id; });
 }
 
+/* the browser-tab icon: the app's mark cut down to what reads at 16px -- one dot
+   on the spine in the open tab's colour, and three headline bars */
+function favicon(){
+  var c = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ce1126';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'+
+    '<rect width="64" height="64" rx="14" fill="#0d1013"/>'+
+    '<rect x="17.5" y="14" width="3" height="38" fill="#3a434d"/>'+
+    '<circle cx="19" cy="20" r="8" fill="'+c+'"/><circle cx="19" cy="33" r="4.5" fill="#5b6672"/><circle cx="19" cy="46" r="4.5" fill="#5b6672"/>'+
+    '<rect x="31" y="16.5" width="23" height="7" rx="3.5" fill="#dce1e7"/>'+
+    '<rect x="31" y="29.5" width="16" height="7" rx="3.5" fill="#dce1e7"/>'+
+    '<rect x="31" y="42.5" width="20" height="7" rx="3.5" fill="#dce1e7"/></svg>';
+  var link = document.getElementById('favicon');
+  link.type = 'image/svg+xml';
+  link.href = 'data:image/svg+xml,'+encodeURIComponent(svg);
+}
+
 function render(){
   var T = TEAMS[cur], games = T.games, arts = T.arts;
   document.documentElement.setAttribute('data-team', T.feed.slug);
+  favicon();
   tabs();
 
   // where the team stands: big text, then what it's measured against
@@ -421,6 +446,7 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 pick();
 render();
 pull();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
 })();
 </script>
 </body>
