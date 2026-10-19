@@ -108,5 +108,101 @@
    "cavs",
    "cleveland"
   ]
+ },
+ {
+  "team": "Tottenham",
+  "teaser": false,
+  "hide": [
+   "premier league",
+   "man city",
+   "manchester city",
+   "ask the ref",
+   "q&a",
+   "your questions",
+   "predictions"
+  ],
+  "unless": [
+   "tottenham",
+   "spurs",
+   "de zerbi",
+   "the lane"
+  ]
+ },
+ {
+  "team": "Tottenham",
+  "teaser": false,
+  "hide": [
+   "arsenal",
+   "man utd",
+   "manchester united",
+   "liverpool",
+   "chelsea",
+   "everton",
+   "leeds",
+   "var",
+   "officiating",
+   "dealsheet",
+   "the briefing",
+   "our league",
+   "our writers"
+  ],
+  "unless": [
+   "tottenham",
+   "spurs",
+   "de zerbi",
+   "the lane"
+  ]
+ },
+ {
+  "team": "USMNT",
+  "teaser": false,
+  "hide": [
+   "*"
+  ],
+  "unless": [
+   "usmnt",
+   "u.s.",
+   "united states",
+   "pochettino"
+  ]
+ },
+ {
+  "team": "USMNT",
+  "teaser": false,
+  "hide": [
+   "*"
+  ],
+  "unless": [
+   "vs.",
+   "beats",
+   "blanks",
+   "victory",
+   "win over",
+   "loses to",
+   "defeat",
+   "friendly",
+   "nations league",
+   "qualifier",
+   "ratings",
+   "takeaways",
+   "observations",
+   "squad",
+   "roster",
+   "usmnt in",
+   "player pool",
+   "talents",
+   "window"
+  ]
+ },
+ {
+  "team": "Atlanta",
+  "teaser": false,
+  "hide": [
+   "*"
+  ],
+  "unless": [
+   "atlanta",
+   "the verdict"
+  ]
  }
 ]
