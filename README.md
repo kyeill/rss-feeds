@@ -142,6 +142,13 @@ says which stories to drop. Kyle edits it; the next hourly build applies it.
 - **Unless it contains**: optional exceptions, comma-separated — e.g. hide
   "NHL" unless "Red Wings" keeps the league pieces that are about Detroit.
 - A row with nothing in "Hide if it contains" is ignored, so notes rows are fine.
+- **A phrase can't contain a comma** — the comma splits it. "fan, explained"
+  becomes "fan" and "explained", and "fan" alone hides every headline with
+  "fans" or "fantastic" in it (found while testing, 2026-10-19).
+- Rules are separate: a story is hidden if ANY row hides it, and a row's
+  "Unless" only rescues it from that row. So "NFL unless Lions" keeps "Week 5
+  NFL power rankings: … Lions fall flat" past the league row, and the
+  "power rankings" row still hides it.
 
 The starting five rows were worked out from what siftrss had been dropping and
 reproduce it exactly (checked story by story on 2026-10-19). The header row
