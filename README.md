@@ -129,6 +129,35 @@ League Pass, then the team's own home/away listing (the Tigers' is
 the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
 none — every NFL game has a network.
 
+## Michigan Football and Michigan Basketball (added 2026-10-19, first on home)
+
+Kyle's four sources: The Athletic's Michigan football and basketball feeds,
+MGoBlog (`mgoblog.com/fbfeed`, both sports and more) and UMHoops. His rule:
+MGoBlog posts that are purely basketball go to Basketball; everything else of
+MGoBlog's — football, hockey, podcasts, mixed — goes to Football.
+
+- **Sorting MGoBlog**: its feed has no categories but carries each post's full
+  text, so `is_basketball()` counts terms only one sport uses; a post is
+  basketball with some basketball terms (a "Hoops"/"WBB" headline counts
+  double) and next to no football or hockey ones (hockey shares "rebound"
+  and "paint"). Checked on 21 posts. Women's basketball counts as basketball.
+- **MGoBlog keeps only its newest 10 posts**, about four days, so posts are
+  remembered in `cache/archive/` (one JSON per feed, sport decided once,
+  400 days kept) and every build adds what's new.
+- **UMHoops is not included**: its firewall refuses the build's HTTP client
+  (Python's, and Windows' curl) whatever user agent it sends; getting around
+  that would mean evading their bot protection, so it was left out.
+- Games: ESPN college football / men's basketball, team id 130. Place and
+  games back are Michigan's Big Ten rank and ESPN's gamesBehind (the leader
+  shows games clear of second). Football's third figure is ESPN FPI's playoff
+  (CFP) odds; basketball's is its record. ESPN shows last season's basketball
+  table until games are played, so that section shows dashes till November.
+- A college opponent is its school alone ("Penn State"): ESPN gives college
+  teams no nickname. Each story shows its source ("The Athletic", "MGoBlog").
+- Rule rows can name a source: `The Athletic` with `*` and a Michigan keep-list
+  trims The Athletic's national college pieces in both Michigan sections and
+  touches nothing else (other sections' stories carry no source label).
+
 ## Tottenham, Soccer and Power Rankings (added 2026-10-19)
 
 **Tottenham** works like the other team tabs, from ESPN soccer: every
