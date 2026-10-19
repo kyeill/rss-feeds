@@ -245,5 +245,22 @@
   "unless": [
    "season"
   ]
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "hockeycast"
+  ],
+  "unless": []
+ },
+ {
+  "team": "UMHoops",
+  "teaser": false,
+  "hide": [
+   "photo gallery",
+   "thread"
+  ],
+  "unless": []
  }
 ]
