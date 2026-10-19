@@ -56,48 +56,6 @@
   ]
  },
  {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "power rankings",
-   "odds",
-   "betting",
-   "how to watch",
-   "watch guide",
-   "streaming guide",
-   "all 30 teams",
-   "all 32 teams",
-   "every team",
-   "playoff simulator"
-  ],
-  "unless": []
- },
- {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "the bounce",
-   "athletic hockey show",
-   "athletic football show",
-   "pick six",
-   "submit your",
-   "take your questions",
-   "fan survey"
-  ],
-  "unless": []
- },
- {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "hall of fame tiers",
-   "hall of very good",
-   "rooting guide",
-   "all-star game"
-  ],
-  "unless": []
- },
- {
   "team": "Cavaliers",
   "teaser": false,
   "hide": [
@@ -223,18 +181,6 @@
   ]
  },
  {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "podcast",
-   "mgoradio",
-   "wtka",
-   "video:",
-   "highlights"
-  ],
-  "unless": []
- },
- {
   "team": "MGoBlog",
   "teaser": false,
   "hide": [
@@ -247,7 +193,7 @@
   ]
  },
  {
-  "team": "All",
+  "team": "MGoBlog",
   "teaser": false,
   "hide": [
    "hockeycast"
@@ -260,6 +206,60 @@
   "hide": [
    "photo gallery",
    "thread"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "podcast",
+   "mgoradio",
+   "wtka",
+   "video:",
+   "highlights"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "power rankings",
+   "odds",
+   "betting",
+   "how to watch",
+   "watch guide",
+   "streaming guide",
+   "all 30 teams",
+   "all 32 teams",
+   "every team",
+   "playoff simulator"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "the bounce",
+   "athletic hockey show",
+   "athletic football show",
+   "pick six",
+   "submit your",
+   "take your questions",
+   "fan survey"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "hall of fame tiers",
+   "hall of very good",
+   "rooting guide",
+   "all-star game"
   ],
   "unless": []
  }
