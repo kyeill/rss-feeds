@@ -388,8 +388,9 @@ def read_rules():
             f"https://docs.google.com/spreadsheets/d/{sid}/export?format=csv&gid={gid}"))))
         if not rows:
             raise ValueError("the rules tab is empty")
-        if [c.strip() for c in rows[0][:len(RULES_HEADER)]] != RULES_HEADER:
-            raise ValueError(f"the first row should read {RULES_HEADER}, not {rows[0][:5]}")
+        # the first four columns must be there by name; "Notes" is Kyle's and may go
+        if [c.strip() for c in rows[0][:4]] != RULES_HEADER[:4]:
+            raise ValueError(f"the first row should read {RULES_HEADER[:4]} (+ Notes), not {rows[0][:5]}")
         rules = []
         for r in rows[1:]:
             r = [c.strip() for c in r] + [""] * len(RULES_HEADER)

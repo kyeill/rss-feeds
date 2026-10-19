@@ -1,14 +1,138 @@
 [
  {
-  "team": "Red Wings",
+  "team": "All",
   "teaser": false,
   "hide": [
-   "nhl"
+   "podcast",
+   "video",
+   "highlights"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "odds",
+   "betting",
+   "how to watch",
+   "watch guide",
+   "streaming guide"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "power rankings",
+   "all 30 teams",
+   "all 32 teams",
+   "every team"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "the bounce",
+   "athletic hockey show",
+   "athletic football show",
+   "pick six"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "rooting guide",
+   "playoff simulator"
+  ],
+  "unless": []
+ },
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "submit your",
+   "take your questions",
+   "fan survey"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Michigan Football",
+  "teaser": false,
+  "hide": [
+   "ap top 25",
+   "nfl draft"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Michigan Basketball",
+  "teaser": false,
+  "hide": [
+   "basketball top 25"
+  ],
+  "unless": []
+ },
+ {
+  "team": "MGoBlog",
+  "teaser": false,
+  "hide": [
+   "hockeycast",
+   "mgoradio",
+   "wtka"
+  ],
+  "unless": []
+ },
+ {
+  "team": "MGoBlog",
+  "teaser": false,
+  "hide": [
+   "fee fi foe film",
+   "neck sharpies",
+   "punt-counterpunt",
+   "tailgate",
+   "this week on state street"
   ],
   "unless": [
-   "red wings",
-   "detroit"
+   "season"
   ]
+ },
+ {
+  "team": "MGoBlog",
+  "teaser": false,
+  "hide": [
+   "preview:"
+  ],
+  "unless": [
+   "season"
+  ]
+ },
+ {
+  "team": "UMHoops",
+  "teaser": false,
+  "hide": [
+   "photo gallery",
+   "thread",
+   "what to watch"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Tottenham",
+  "teaser": false,
+  "hide": [
+   "predictions",
+   "premier league forum",
+   "q&a",
+   "your questions"
+  ],
+  "unless": []
  },
  {
   "team": "Tigers",
@@ -17,8 +141,8 @@
    "mlb"
   ],
   "unless": [
-   "tigers",
-   "detroit"
+   "detroit",
+   "tigers"
   ]
  },
  {
@@ -28,8 +152,8 @@
    "nfl"
   ],
   "unless": [
-   "lions",
-   "detroit"
+   "detroit",
+   "lions"
   ]
  },
  {
@@ -39,8 +163,19 @@
    "nba"
   ],
   "unless": [
-   "pistons",
-   "detroit"
+   "detroit",
+   "pistons"
+  ]
+ },
+ {
+  "team": "Red Wings",
+  "teaser": false,
+  "hide": [
+   "nhl"
+  ],
+  "unless": [
+   "detroit",
+   "red wings"
   ]
  },
  {
@@ -50,65 +185,9 @@
    "nba"
   ],
   "unless": [
+   "cleveland",
    "cavaliers",
-   "cavs",
-   "cleveland"
-  ]
- },
- {
-  "team": "Cavaliers",
-  "teaser": false,
-  "hide": [
-   "lebron"
-  ],
-  "unless": [
-   "cavaliers",
-   "cavs",
-   "cleveland"
-  ]
- },
- {
-  "team": "Tottenham",
-  "teaser": false,
-  "hide": [
-   "premier league",
-   "man city",
-   "manchester city",
-   "ask the ref",
-   "q&a",
-   "your questions",
-   "predictions"
-  ],
-  "unless": [
-   "tottenham",
-   "spurs",
-   "de zerbi",
-   "the lane"
-  ]
- },
- {
-  "team": "Tottenham",
-  "teaser": false,
-  "hide": [
-   "arsenal",
-   "man utd",
-   "manchester united",
-   "liverpool",
-   "chelsea",
-   "everton",
-   "leeds",
-   "var",
-   "officiating",
-   "dealsheet",
-   "the briefing",
-   "our league",
-   "our writers"
-  ],
-  "unless": [
-   "tottenham",
-   "spurs",
-   "de zerbi",
-   "the lane"
+   "cavs"
   ]
  },
  {
@@ -118,167 +197,9 @@
    "*"
   ],
   "unless": [
-   "usmnt",
    "u.s.",
    "united states",
-   "pochettino"
+   "usmnt"
   ]
- },
- {
-  "team": "USMNT",
-  "teaser": false,
-  "hide": [
-   "*"
-  ],
-  "unless": [
-   "vs.",
-   "beats",
-   "blanks",
-   "victory",
-   "win over",
-   "loses to",
-   "defeat",
-   "friendly",
-   "nations league",
-   "qualifier",
-   "ratings",
-   "takeaways",
-   "observations",
-   "squad",
-   "roster",
-   "usmnt in",
-   "player pool",
-   "talents",
-   "window"
-  ]
- },
- {
-  "team": "Atlanta",
-  "teaser": false,
-  "hide": [
-   "*"
-  ],
-  "unless": [
-   "atlanta",
-   "the verdict"
-  ]
- },
- {
-  "team": "The Athletic",
-  "teaser": false,
-  "hide": [
-   "*"
-  ],
-  "unless": [
-   "michigan",
-   "wolverines",
-   "underwood",
-   "sherrone",
-   "dusty may",
-   "big house",
-   "crisler",
-   "ann arbor"
-  ]
- },
- {
-  "team": "MGoBlog",
-  "teaser": false,
-  "hide": [
-   "punt-counterpunt",
-   "fee fi foe film",
-   "preview:"
-  ],
-  "unless": [
-   "season"
-  ]
- },
- {
-  "team": "MGoBlog",
-  "teaser": false,
-  "hide": [
-   "hockeycast"
-  ],
-  "unless": []
- },
- {
-  "team": "UMHoops",
-  "teaser": false,
-  "hide": [
-   "photo gallery",
-   "thread"
-  ],
-  "unless": []
- },
- {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "podcast",
-   "mgoradio",
-   "wtka",
-   "video:",
-   "highlights"
-  ],
-  "unless": []
- },
- {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "power rankings",
-   "odds",
-   "betting",
-   "how to watch",
-   "watch guide",
-   "streaming guide",
-   "all 30 teams",
-   "all 32 teams",
-   "every team",
-   "playoff simulator"
-  ],
-<<<<<<< HEAD
-  "unless": []
-=======
-  "unless": [
-   "season"
-  ]
->>>>>>> 1775a4e (Headline names help sort MGoBlog: rosters plus basketball personnel news)
- },
- {
-  "team": "All",
-  "teaser": false,
-  "hide": [
-<<<<<<< HEAD
-   "the bounce",
-   "athletic hockey show",
-   "athletic football show",
-   "pick six",
-   "submit your",
-   "take your questions",
-   "fan survey"
-=======
-   "hockeycast"
->>>>>>> 1775a4e (Headline names help sort MGoBlog: rosters plus basketball personnel news)
-  ],
-  "unless": []
- },
- {
-<<<<<<< HEAD
-  "team": "All",
-  "teaser": false,
-  "hide": [
-   "hall of fame tiers",
-   "hall of very good",
-   "rooting guide",
-   "all-star game"
-=======
-  "team": "UMHoops",
-  "teaser": false,
-  "hide": [
-   "photo gallery",
-   "thread"
->>>>>>> 1775a4e (Headline names help sort MGoBlog: rosters plus basketball personnel news)
-  ],
-  "unless": []
  }
 ]
