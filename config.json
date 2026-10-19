@@ -3,6 +3,14 @@
   "rules": "https://docs.google.com/spreadsheets/d/1v9ErfF8bZ-jpboTz6cHth1sZf8VlCQa2DOufH74OJmk/edit?gid=1881768788",
   "feeds": [
     {
+      "slug": "tottenham",
+      "short": "Tottenham",
+      "league": "epl",
+      "team": "367",
+      "source": "The Athletic",
+      "feed": "https://www.nytimes.com/athletic/rss/football/tottenham-hotspur/"
+    },
+    {
       "slug": "tigers",
       "short": "Tigers",
       "league": "mlb",
@@ -46,14 +54,6 @@
       "localTv": "DAZN",
       "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/nba/cavaliers/"
-    },
-    {
-      "slug": "tottenham",
-      "short": "Tottenham",
-      "league": "epl",
-      "team": "367",
-      "source": "The Athletic",
-      "feed": "https://www.nytimes.com/athletic/rss/football/tottenham-hotspur/"
     },
     {
       "slug": "soccer",

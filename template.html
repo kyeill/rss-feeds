@@ -31,13 +31,14 @@
 /* each tab wears its team's colour; the Red Wings' red is the default above.
    --accent fills, --accent-text is the same hue light enough to read as text,
    --on-accent is the text on a filled pill. */
-:root[data-team="tigers"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
-:root[data-team="lions"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
-:root[data-team="pistons"]{--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
-:root[data-team="cavaliers"]{--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
-:root[data-team="tottenham"]{--accent:#8fa3ec; --accent-text:#a3b4f0; --accent-ink:#bcc8f5; --accent-wash:#141a2e; --on-accent:#0d1013;}
-:root[data-team="soccer"]{--accent:#e2364b; --accent-text:#ef5266; --accent-ink:#f47a8a; --accent-wash:#271216; --on-accent:#fff;}
-:root[data-team="rankings"]{--accent:#b6c0cc; --accent-text:#c3ccd6; --accent-ink:#d5dce4; --accent-wash:#1a1e23; --on-accent:#15181d;}
+[data-team="redwings"]{--accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;}
+[data-team="tigers"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
+[data-team="lions"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
+[data-team="pistons"]{--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
+[data-team="cavaliers"]{--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
+[data-team="tottenham"]{--accent:#8fa3ec; --accent-text:#a3b4f0; --accent-ink:#bcc8f5; --accent-wash:#141a2e; --on-accent:#0d1013;}
+[data-team="soccer"]{--accent:#e2364b; --accent-text:#ef5266; --accent-ink:#f47a8a; --accent-wash:#271216; --on-accent:#fff;}
+[data-team="rankings"],[data-team="home"]{--accent:#b6c0cc; --accent-text:#c3ccd6; --accent-ink:#d5dce4; --accent-wash:#1a1e23; --on-accent:#15181d;}
 *{box-sizing:border-box}
 body{background:var(--ice);color:var(--ink);font-family:var(--ff-ui);font-size:15px;line-height:1.45;margin:0;padding:0 16px;-webkit-font-smoothing:antialiased}
 .wrap{max-width:860px;margin:0 auto;padding-block:0 64px}
@@ -46,16 +47,25 @@ a{color:inherit;text-decoration:none}
 .lbl{font-family:var(--ff-ui);font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
 .num{font-variant-numeric:tabular-nums}
 
-/* team tabs */
-header.tabs{position:sticky;top:0;z-index:6;background:var(--ice);border-bottom:2px solid var(--ink);
-  padding-top:max(14px, env(safe-area-inset-top));display:flex;gap:22px;overflow-x:auto;scrollbar-width:none}
-header.tabs::-webkit-scrollbar{display:none}
-/* team tabs read like The Athletic's own navigation: small uppercase Franklin */
-.tabs button{appearance:none;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;cursor:pointer;
-  font-family:var(--ff-ui);font-weight:700;font-size:clamp(12.5px,3.4vw,15px);letter-spacing:.04em;text-transform:uppercase;line-height:1;
-  color:var(--muted);padding:8px 0 11px;white-space:nowrap}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-.tabs button span{font-variant-numeric:tabular-nums;color:var(--accent-ink);font-weight:600}
+/* team page header: a Home button and the team's name; the home page lists every team */
+header.top{position:sticky;top:0;z-index:6;background:var(--ice);border-bottom:2px solid var(--ink);
+  padding:max(12px, env(safe-area-inset-top)) 0 10px;display:flex;align-items:center;gap:14px}
+header.top[hidden]{display:none}
+.home-btn{appearance:none;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:3px;
+  font-family:var(--ff-ui);font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);padding:7px 11px 7px 9px}
+.home-btn:hover{border-color:var(--accent)}
+h1.team{font-family:var(--ff-slab);font-weight:700;font-size:22px;line-height:1.1;margin:0;border-bottom:3px solid var(--accent);padding-bottom:2px}
+h1.team span{font-family:var(--ff-ui);font-size:15px;font-weight:600;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+
+#home[hidden],#body[hidden]{display:none}
+.home-title{font-family:var(--ff-slab);font-weight:700;font-size:28px;margin:0;padding:max(22px, env(safe-area-inset-top)) 0 14px;border-bottom:2px solid var(--ink)}
+.teams{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.team-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-left:4px solid var(--accent);border-radius:3px;padding:15px 16px}
+.team-row:hover{border-color:var(--accent)}
+.team-row .name{font-family:var(--ff-slab);font-weight:700;font-size:20px}
+.team-row .count{font-family:var(--ff-ui);font-weight:700;font-size:15px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.team-row .done{font-family:var(--ff-ui);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 
 .standing[hidden]{display:none}
 .standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
@@ -121,10 +131,6 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 .linkbtn[hidden]{display:none}
 
 @media (max-width:620px){
-  /* five tabs with counts don't fit a phone: the row scrolls, and fades at the right
-     edge to say so (the padding lets the last tab scroll clear of the fade) */
-  header.tabs{gap:14px;padding-right:28px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
-    mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
   .feed::before{display:none}
   .row{grid-template-columns:1fr}
   .when-col{text-align:left;padding:14px 0 0;display:flex;gap:8px;align-items:baseline}
@@ -146,9 +152,14 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 </head>
 <body>
 <div class="wrap">
-  <header class="tabs" role="tablist" aria-label="Teams" id="tabs"></header>
+  <header class="top" id="top" hidden></header>
 
-  <div id="body">
+  <section id="home" hidden>
+    <h1 class="home-title">RSS Feeds</h1>
+    <nav class="teams" id="teams" aria-label="Teams"></nav>
+  </section>
+
+  <div id="body" hidden>
   <div class="standing">
     <div class="rec"><b id="placeNum">&mdash;</b><span class="lbl" id="placeNote">division</span></div>
     <div class="rec"><b id="gapNum">&mdash;</b><span class="lbl" id="gapNote">playoff spot</span></div>
@@ -286,27 +297,32 @@ function pull(){
     .then(function(){ pulling = false; });
 }
 
-/* which team is showing: the #slug in the address if there is one, else the
-   tab this browser last had open, else the first */
-var cur = 0;
+/* which page is showing: the #slug in the address names a team; no slug is the home
+   page, which lists every team with its unread count */
+var cur = -1, fromHome = false;
 function pick(){
   var slug = location.hash.slice(1);
-  if(!slug){ try{ slug = localStorage.getItem('rssf:tab') || ''; }catch(e){} }
+  cur = -1;
   TEAMS.forEach(function(t, i){ if(t.feed.slug === slug) cur = i; });
 }
+function unreadOf(t){ return t.arts.filter(function(a){ return !read.has(a.id); }).length; }
+// the counts: on the home page's list, or in the team page's header and footer link
 function tabs(){
-  document.getElementById('tabs').innerHTML = TEAMS.map(function(t, i){
-    var n = t.arts.filter(function(a){ return !read.has(a.id); }).length;
-    return '<button type="button" role="tab" data-i="'+i+'" aria-selected="'+(i===cur)+'">'+esc(t.feed.short)+
-      (n ? ' <span>('+n+')</span>' : '')+'</button>';
-  }).join('');
-  // five tabs overflow a phone: keep the open one in view
-  var bar = document.getElementById('tabs'), on = bar.querySelector('[aria-selected="true"]');
-  if(on && (on.offsetLeft < bar.scrollLeft || on.offsetLeft + on.offsetWidth > bar.scrollLeft + bar.clientWidth))
-    bar.scrollLeft = on.offsetLeft - 16;
-  var left = unreadIds().length, btn = document.getElementById('allRead');
-  btn.textContent = 'Mark all '+left+' '+TEAMS[cur].feed.short+' stories read';
-  btn.hidden = !left;
+  var btn = document.getElementById('allRead');
+  if(cur < 0){
+    document.getElementById('teams').innerHTML = TEAMS.map(function(t){
+      var n = unreadOf(t);
+      return '<a class="team-row" data-team="'+esc(t.feed.slug)+'" href="#'+esc(t.feed.slug)+'"><span class="name">'+esc(t.feed.short)+'</span>'+
+        (n ? '<span class="count">'+n+' unread</span>' : '<span class="done">All read</span>')+'</a>';
+    }).join('');
+    btn.hidden = true;
+    return;
+  }
+  var n = unreadOf(TEAMS[cur]);
+  document.getElementById('top').innerHTML = '<button type="button" class="home-btn" id="homeBtn">&lsaquo; Home</button>'+
+    '<h1 class="team">'+esc(TEAMS[cur].feed.short)+(n ? ' <span>('+n+')</span>' : '')+'</h1>';
+  btn.textContent = 'Mark all '+n+' '+TEAMS[cur].feed.short+' stories read';
+  btn.hidden = !n;
 }
 function unreadIds(){
   return TEAMS[cur].arts.filter(function(a){ return !read.has(a.id); }).map(function(a){ return a.id; });
@@ -329,8 +345,21 @@ function favicon(){
 }
 
 function render(){
+  var home = cur < 0;
+  document.getElementById('home').hidden = !home;
+  document.getElementById('body').hidden = home;
+  document.getElementById('top').hidden = home;
+  if(home){
+    document.documentElement.setAttribute('data-team', 'home');
+    document.title = 'RSS Feeds';
+    document.getElementById('stamp').textContent = '';
+    favicon();
+    tabs();
+    return;
+  }
   var T = TEAMS[cur], games = T.games, arts = T.arts;
   document.documentElement.setAttribute('data-team', T.feed.slug);
+  document.title = T.feed.short+' · RSS Feeds';
   favicon();
   tabs();
 
@@ -427,10 +456,9 @@ document.getElementById('allRead').addEventListener('click', function(){
   if(ids.length && confirm('Mark all '+ids.length+' '+TEAMS[cur].feed.short+' stories as read?')){ markRead(ids); render(); }
 });
 function go(i, from){
-  if(i < 0 || i >= TEAMS.length || i === cur) return;
+  if(cur < 0 || i < 0 || i >= TEAMS.length || i === cur) return;
   cur = i;
   history.replaceState(null, '', '#'+TEAMS[cur].feed.slug);
-  try{ localStorage.setItem('rssf:tab', TEAMS[cur].feed.slug); }catch(e){}
   render();
   window.scrollTo(0, 0);
   if(from){                                   // a swipe slides the new team in from that side
@@ -440,17 +468,23 @@ function go(i, from){
     body.classList.add(from === 'right' ? 'in-right' : 'in-left');
   }
 }
-document.getElementById('tabs').addEventListener('click', function(e){
-  var b = e.target.closest('button[data-i]');
-  if(b) go(+b.dataset.i);
+// a team on the home page is a plain link to #slug, so the phone's Back button returns
+// home; the Home button goes back the same way when that's where the page came from
+document.getElementById('teams').addEventListener('click', function(e){
+  if(e.target.closest('.team-row')) fromHome = true;
+});
+document.getElementById('top').addEventListener('click', function(e){
+  if(!e.target.closest('#homeBtn')) return;
+  if(fromHome){ history.back(); return; }
+  history.pushState(null, '', location.pathname + location.search);
+  pick(); render(); window.scrollTo(0, 0);
 });
 
-// swipe left or right anywhere below the tabs for the next or previous team. Only a
-// quick, clearly sideways stroke counts, so scrolling the feed never changes team; the
-// tab row keeps its own sideways scroll.
+// on a team page, swipe left or right for the next or previous team. Only a quick,
+// clearly sideways stroke counts, so scrolling the feed never changes team.
 var touch = null;
 document.addEventListener('touchstart', function(e){
-  touch = e.touches.length === 1 && !e.target.closest('#tabs')
+  touch = e.touches.length === 1 && !e.target.closest('#top')
     ? {x:e.touches[0].clientX, y:e.touches[0].clientY, t:Date.now()} : null;
 }, {passive:true});
 document.addEventListener('touchend', function(e){
@@ -461,7 +495,12 @@ document.addEventListener('touchend', function(e){
   if(quick && Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy))
     go(cur + (dx < 0 ? 1 : -1), dx < 0 ? 'right' : 'left');
 }, {passive:true});
-window.addEventListener('hashchange', function(){ pick(); render(); });
+window.addEventListener('hashchange', function(){
+  pick();
+  if(cur < 0) fromHome = false;
+  render();
+  window.scrollTo(0, 0);
+});
 // back from another app or tab: pick up whatever was read on the other device
 // Phones often resume a page from memory rather than reloading it, and don't all say
 // so the same way, so listen for every signal -- and check every two minutes while open.

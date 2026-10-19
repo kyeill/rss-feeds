@@ -7,8 +7,14 @@ the next morning, the contract news that breaks on an off day.
 
 Live: https://kyeill.github.io/rss-feeds/ · repo: kyeill/rss-feeds
 
-Eight tabs: **Tigers, Lions, Pistons, Red Wings, Cavaliers, Tottenham, Soccer,
-Power Rankings** (Michigan to come, multi-source). The first five —
+A **home page** lists every section with its unread count; tapping one opens
+it, and each section page has a **‹ Home** button in place of the old tab row
+(Kyle, 2026-10-19). Order: (Michigan, to come) **Tottenham, Tigers, Lions,
+Pistons, Red Wings, Cavaliers, Soccer, Power Rankings**. The address is the
+route: no `#` is home, `#slug` a section, so the phone's Back button returns
+home and a section can be bookmarked; the Home button goes Back when the page
+came from home, and otherwise replaces the address. Swiping still moves
+between sections on a section page (not on home). The first five —
 each The Athletic's own team feed (`nytimes.com/athletic/rss/<league>/<team>/`,
 URLs in `config.json`), filtered by the rules in Kyle's Sheet (below). Until
 2026-10-19 the feeds came through siftrss, which did the filtering. The Red
@@ -99,7 +105,7 @@ season all winter), so a table whose games played disagree with the schedule's
 shows "—" for place and gap; odds still show when they are this season's.
 NFL times not yet set read "Time TBD".
 
-The last tab opened is remembered per browser; `#slug` in the address wins. On a phone, a quick sideways swipe below
+The page opens on home unless the address names a section. On a phone, a quick sideways swipe below
 the tabs moves to the next or previous team (a stroke must travel 60px, at
 least twice as far sideways as down, within 0.7s — so scrolling never changes
 team); the tab row keeps its own sideways scroll.
