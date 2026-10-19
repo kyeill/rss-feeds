@@ -17,7 +17,7 @@
           "label": "MGoBlog",
           "feed": "https://mgoblog.com/fbfeed",
           "archive": true,
-          "sport": "not-basketball"
+          "sport": "other"
         }
       ]
     },
@@ -33,10 +33,30 @@
           "feed": "https://www.nytimes.com/athletic/rss/college-basketball/michigan-wolverines-college-basketball/"
         },
         {
+          "label": "UMHoops",
+          "type": "wordpress",
+          "feed": "https://umhoops.com"
+        },
+        {
           "label": "MGoBlog",
           "feed": "https://mgoblog.com/fbfeed",
           "archive": true,
           "sport": "basketball"
+        }
+      ]
+    },
+    {
+      "slug": "mhockey",
+      "short": "Michigan Hockey",
+      "league": "chky",
+      "team": "130",
+      "localTv": "",
+      "sources": [
+        {
+          "label": "MGoBlog",
+          "feed": "https://mgoblog.com/fbfeed",
+          "archive": true,
+          "sport": "hockey"
         }
       ]
     },
