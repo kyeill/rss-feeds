@@ -155,8 +155,18 @@ Football. There is no Athletic Michigan hockey feed, so Hockey is MGoBlog only.
   decide before any word count, because Feedly's copy of some posts carries
   other posts' text (a hockey recap read as 49 football terms). Basketball
   headline patterns are anchored at the start, so a mailbag that "Talks …
-  Hoops, and Hockey" stays mixed. The one known miss: a basketball "Portal
-  Hello" whose text names no basketball terms lands in Football.
+  Hoops, and Hockey" stays mixed.
+- **Then the people a headline names** (`load_names`, `named`): Michigan's
+  current rosters and coaches from ESPN (team 130, all three sports), plus
+  names from The Athletic's and UMHoops' basketball headlines about people
+  joining, leaving or signing — they cover new arrivals before ESPN's roster
+  does. A headline name is dropped if football headlines use it too (the
+  basketball feeds also cover Sherrone Moore and Bryce Underwood), and words
+  like teams, places and "recruiting roundup" never count. Names compare
+  without punctuation ("JP" vs ESPN's "J.P."). A headline naming people of
+  exactly one sport decides; that is what moved "Portal Hello: JP Estrella"
+  (no basketball terms in its text) from Football to Basketball. Word counts
+  come last. 61/61 test posts right.
 - **UMHoops comes from its WordPress REST API** (`/wp-json/wp/v2/posts`, up to
   300 posts since April 1): its firewall refuses the build at `/feed/` (Python's
   client and Windows' curl, whatever the user agent) but serves the site's own

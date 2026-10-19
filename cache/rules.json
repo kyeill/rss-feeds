@@ -236,12 +236,19 @@
    "every team",
    "playoff simulator"
   ],
+<<<<<<< HEAD
   "unless": []
+=======
+  "unless": [
+   "season"
+  ]
+>>>>>>> 1775a4e (Headline names help sort MGoBlog: rosters plus basketball personnel news)
  },
  {
   "team": "All",
   "teaser": false,
   "hide": [
+<<<<<<< HEAD
    "the bounce",
    "athletic hockey show",
    "athletic football show",
@@ -249,10 +256,14 @@
    "submit your",
    "take your questions",
    "fan survey"
+=======
+   "hockeycast"
+>>>>>>> 1775a4e (Headline names help sort MGoBlog: rosters plus basketball personnel news)
   ],
   "unless": []
  },
  {
+<<<<<<< HEAD
   "team": "All",
   "teaser": false,
   "hide": [
@@ -260,6 +271,13 @@
    "hall of very good",
    "rooting guide",
    "all-star game"
+=======
+  "team": "UMHoops",
+  "teaser": false,
+  "hide": [
+   "photo gallery",
+   "thread"
+>>>>>>> 1775a4e (Headline names help sort MGoBlog: rosters plus basketball personnel news)
   ],
   "unless": []
  }

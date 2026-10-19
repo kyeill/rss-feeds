@@ -34,10 +34,22 @@ CONFIG = json.loads((HERE / "config.json").read_text(encoding="utf-8"))
 UA = {"User-Agent": "rss-feeds build (github.com/kyeill/rss-feeds)"}
 
 
+FETCHED = {}
+
+
 def fetch(url):
     """One retry after a timeout or dropped connection: the build makes ~40
     requests an hour, and one slow answer shouldn't fail it (and email Kyle).
-    An HTTP error (403, 404, 500) is an answer, not a hiccup, and isn't retried."""
+    An HTTP error (403, 404, 500) is an answer, not a hiccup, and isn't retried.
+    Each address is downloaded once per build: the names step reads the
+    basketball feeds before their section does."""
+    if url in FETCHED:
+        return FETCHED[url]
+    FETCHED[url] = _download(url)
+    return FETCHED[url]
+
+
+def _download(url):
     req = urllib.request.Request(url, headers=UA)
     for attempt in (1, 2):
         try:
@@ -188,6 +200,76 @@ FOOTBALL = re.compile(r"football|touchdown|quarterback|\bqb\b|\byards\b|rushing|
 HOCKEY = re.compile(r"hockey|goalie|power play|penalty kill|\bpuck|faceoff|shots on goal|blue line|yost|\bncha\b|\bccha\b")
 
 
+# Names that settle an MGoBlog headline the word count can't ("Portal Hello: JP
+# Estrella" names no basketball terms at all). Filled once per build by
+# load_names(): {"basketball": {...}, "hockey": {...}, "football": {...}}.
+NAMES = {"basketball": set(), "hockey": set(), "football": set()}
+
+# Capitalised words in a basketball headline that are never part of a person's name.
+NOT_NAMES = set("""michigan michigans state big ten final four ncaa nba draft march madness sweet elite
+eight national championship photo gallery open thread video podcast exhibition europe game preview
+recap college basketball summer league portal transfer head coach guard forward center wolverines
+spartans the and of for with from after vs at in on how why what who when where is are will can
+mega superbet lithuania oregon arizona uconn duke purdue illinois indiana iowa maryland minnesota
+nebraska northwestern ohio penn rutgers ucla usc washington wisconsin eastern western central
+fab five crisler ann arbor detroit pistons hoops recruiting roundup board hot tracker roster scout every player
+magic""".split())
+
+
+def name_key(text):
+    """Lower case, punctuation dropped: MGoBlog writes "JP Estrella", ESPN "J.P. Estrella"."""
+    return " ".join(re.sub(r"[^a-z ]", "", text.lower().replace(".", "").replace("-", " ")).split())
+
+
+# A basketball headline about a person joining, leaving or being signed -- the
+# only kind whose names are taken (others name LeBron, Madison Square Garden...).
+PERSONNEL = re.compile(r"commit|transfer|portal|sign|signee|lands|adds|hire|joins|hello|"
+                       r"visit|offer|recruit|declare|withdraw|return|enter|staff|assistant|depart|leav", re.I)
+
+
+def load_names(basketball_titles, football_titles=()):
+    """Michigan's current rosters and coaches from ESPN, by sport, plus names
+    from the basketball sources' own headlines -- they write about every new
+    arrival (a transfer, a commit, a new assistant) before ESPN's roster has
+    them. A headline-derived name is two or three capitalised words, none of
+    them a team, place or basketball word, taken only from personnel headlines
+    (joining, leaving, signing), and dropped if football headlines use it too
+    -- the basketball feeds also cover Sherrone Moore and Bryce Underwood."""
+    paths = {"basketball": "basketball/mens-college-basketball", "hockey": "hockey/mens-college-hockey",
+             "football": "football/college-football"}
+    for sport, path in paths.items():
+        try:
+            d = espn_json(f"https://site.api.espn.com/apis/site/v2/sports/{path}/teams/130/roster")
+        except Exception as err:
+            print(f"  ! {sport} roster unreadable ({err})")
+            continue
+        people = d.get("athletes", [])
+        if people and isinstance(people[0], dict) and "items" in people[0]:   # football groups by position
+            people = [a for group in people for a in group["items"]]
+        names = [a.get("fullName") or a.get("displayName") or "" for a in people]
+        names += [f"{c.get('firstName', '')} {c.get('lastName', '')}" for c in d.get("coach", [])]
+        NAMES[sport] |= {name_key(n) for n in names if len(name_key(n).split()) >= 2}
+    football_words = " " + " ".join(name_key(t) for t in football_titles) + " "
+    for title in basketball_titles:
+        if not PERSONNEL.search(title):
+            continue
+        for m in re.finditer(r"\b[A-Z][\w'’.]*(?:\s+(?:[A-Z][\w'’.]*|Jr\.?|II|III)){1,2}", title):
+            words = name_key(m.group(0)).split()
+            if len(words) >= 2 and not any(w in NOT_NAMES for w in words):
+                key = " ".join(words)
+                # a name football headlines use too (Sherrone Moore, Warde Manuel) settles nothing
+                if key not in NAMES["football"] and " " + key + " " not in football_words:
+                    NAMES["basketball"].add(key)
+    print(f"  names: {', '.join(f'{k} {len(v)}' for k, v in NAMES.items())}")
+
+
+def named(head):
+    """The one sport whose people a headline names, or None (none, or more than one)."""
+    key = " " + name_key(head) + " "
+    hits = {sport for sport, names in NAMES.items() if any(" " + n + " " in key for n in names)}
+    return hits.pop() if len(hits) == 1 else None
+
+
 def sport_of(title, text):
     """Which section an MGoBlog post belongs to: "basketball", "hockey" or
     "other" (football and everything else -- podcasts, mixed posts, other
@@ -198,9 +280,10 @@ def sport_of(title, text):
     posts' text along -- so such a headline decides first. Otherwise a post is
     basketball or hockey when it has some of that sport's terms and next to
     none of the others' (hockey and basketball share "rebound" and "paint", so
-    each tolerates a stray one). Checked on 21 page samples and Feedly's 50
-    posts on 2026-10-19; the one known miss is a basketball "Portal Hello" whose
-    text names no basketball terms at all, which lands in Football."""
+    each tolerates a stray one). Between the two, a headline naming a current
+    player or coach of exactly one sport decides (see load_names) -- that is
+    what puts "Portal Hello: JP Estrella", whose text has no basketball terms,
+    in Basketball. Checked on 21 page samples and Feedly's 50 posts."""
     t = (title + " " + text).lower()
     head = title.lower()
     if re.search(r"michigan hockey|^hockey\b|hockey preview|hockeycast", head):
@@ -209,6 +292,12 @@ def sport_of(title, text):
     # Coaches, Blame, Hoops, and Hockey" mid-headline is a mixed post
     if re.search(r"^(hoops|wbb)\b|^michigan (men's |women's )?basketball|hoops preview|wbb preview", head):
         return "basketball"
+    # then the people a headline names: "Portal Hello: JP Estrella" is a basketball post
+    person = named(title)
+    if person in ("basketball", "hockey"):
+        return person
+    if person == "football":
+        return "other"
     bb = len(BASKETBALL.findall(t))
     hk = len(HOCKEY.findall(t))
     fb = len(FOOTBALL.findall(t))
@@ -921,6 +1010,29 @@ def main():
     # One page, a tab per feed, in config order.
     feeds = []
     rules = read_rules()
+    # names first: MGoBlog's posts are sorted while the Football section is gathered
+    bb_feed = next((f for f in CONFIG["feeds"] if f.get("league") == "cbb"), None)
+    titles = []
+    if bb_feed:
+        for src in bb_feed["sources"]:
+            if src["label"] == "MGoBlog":
+                continue
+            try:
+                since, _ = season_for("cbb", dt.date.today())
+                got = read_wordpress(src["feed"], since) if src.get("type") == "wordpress" else read_feed(src["feed"], since)
+                titles += [a["title"] for a in got]
+            except Exception as err:
+                print(f"  ! names: {src['label']} unreadable ({err})")
+    fb_feed = next((f for f in CONFIG["feeds"] if f.get("league") == "cfb"), None)
+    fb_titles = []
+    for src in (fb_feed or {}).get("sources", []):
+        if src["label"] == "MGoBlog":
+            continue
+        try:
+            fb_titles += [a["title"] for a in read_feed(src["feed"], season_for("cfb", dt.date.today())[0])]
+        except Exception as err:
+            print(f"  ! names: {src['label']} unreadable ({err})")
+    load_names(titles, fb_titles)
     for feed in CONFIG["feeds"]:
         if feed.get("kind") == "stories":
             articles, dropped = story_tab(feed, rules)
