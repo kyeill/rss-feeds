@@ -35,6 +35,9 @@
 :root[data-team="lions"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
 :root[data-team="pistons"]{--accent:#19c0cb; --accent-text:#2fd0da; --accent-ink:#5fdde5; --accent-wash:#0c2224; --on-accent:#0d1013;}
 :root[data-team="cavaliers"]{--accent:#fdbb30; --accent-text:#fdc54d; --accent-ink:#fdd27a; --accent-wash:#261e0c; --on-accent:#15181d;}
+:root[data-team="tottenham"]{--accent:#8fa3ec; --accent-text:#a3b4f0; --accent-ink:#bcc8f5; --accent-wash:#141a2e; --on-accent:#0d1013;}
+:root[data-team="soccer"]{--accent:#c9b37e; --accent-text:#d6c290; --accent-ink:#e2d3ac; --accent-wash:#221d12; --on-accent:#15181d;}
+:root[data-team="rankings"]{--accent:#b6c0cc; --accent-text:#c3ccd6; --accent-ink:#d5dce4; --accent-wash:#1a1e23; --on-accent:#15181d;}
 *{box-sizing:border-box}
 body{background:var(--ice);color:var(--ink);font-family:var(--ff-ui);font-size:15px;line-height:1.45;margin:0;padding:0 16px;-webkit-font-smoothing:antialiased}
 .wrap{max-width:860px;margin:0 auto;padding-block:0 64px}
@@ -54,6 +57,7 @@ header.tabs::-webkit-scrollbar{display:none}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .tabs button span{font-variant-numeric:tabular-nums;color:var(--accent-ink);font-weight:600}
 
+.standing[hidden]{display:none}
 .standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
 .rec{display:flex;align-items:baseline;gap:8px}
 .rec b{font-family:var(--ff-slab);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
@@ -189,7 +193,7 @@ function ordinal(n){ var s = ['th','st','nd','rd'], v = n % 100; return n + (s[(
    overtime or shootout loss is its own column); football adds ties only once
    there is one; baseball and basketball are W-L. */
 function prep(feed){
-  var hockey = feed.league === 'nhl';
+  var hockey = feed.league === 'nhl', soccer = feed.league === 'epl';
   var games = feed.games.slice().sort(function(a,b){
     return (a.startUTC||a.date) < (b.startUTC||b.date) ? -1 : 1; });
   var w=0,l=0,o=0,t=0,n=0;
@@ -198,19 +202,21 @@ function prep(feed){
     g.pre = g.type === 1;
     g.done = g.ds !== null && g.ds !== undefined;
     if(g.done){
-      g.won = g.ds > g.os;
-      g.tie = g.ds === g.os;
+      // soccer says who won outright, which also settles a cup tie decided on penalties
+      g.won = g.result ? g.result === 'W' : g.ds > g.os;
+      g.tie = g.result ? g.result === 'D' : g.ds === g.os;
       // overtime shows on the result: "W OT", "L SO", "L 2OT" (the NHL's REG is plain)
       var extra = g.last && g.last !== 'REG' ? ' '+g.last : '';
-      g.pill = g.tie ? 'T' : (g.won ? 'W' : 'L') + extra;
+      g.pill = g.tie ? (soccer ? 'D' : 'T') : (g.won ? 'W' : 'L') + extra;
       g.cls = g.won ? 'w' : 'l';
     }
     if(g.pre){ g.gno = ''; return; }              // preseason: no number at all
     if(g.type === 3){ g.gno = 'PO'; return; }      // postseason: no game number, no record
+    if(g.type === 4){ g.gno = ''; return; }        // a cup game: named in its meta line, not numbered
     n++; g.gno = '['+n+']';
     if(!g.done) return;
     if(g.won) w++; else if(g.tie) t++; else if(hockey && extra) o++; else l++;
-    g.rec = hockey ? w+'-'+l+'-'+o : w+'-'+l+(t ? '-'+t : '');
+    g.rec = hockey ? w+'-'+l+'-'+o : soccer ? w+'-'+t+'-'+l : w+'-'+l+(t ? '-'+t : '');
   });
 
   var arts = feed.articles.slice().sort(function(a,b){ return a.iso < b.iso ? -1 : 1; });
@@ -329,23 +335,31 @@ function render(){
   tabs();
 
   // where the team stands: big text, then what it's measured against
+  // story-only tabs (Soccer, Power Rankings) have no table and no schedule
   var S = T.feed.standing, $ = function(id){ return document.getElementById(id); };
-  $('placeNum').textContent = S.place ? ordinal(S.place)+' Place' : '—';
-  $('placeNote').textContent = S.division;
-  if(S.gap === null){ $('gapNum').textContent = '—'; $('gapNote').textContent = 'playoff spot'; }
-  else {
-    $('gapNum').textContent = (S.gap % 1 ? S.gap.toFixed(1) : S.gap)+' '+S.unit+(S.gap === 1 ? '' : 's')+(S.inside ? ' Clear' : ' Back');
-    $('gapNote').textContent = S.inside ? 'of first team out' : 'of playoff spot';
+  document.querySelector('.standing').hidden = !S;
+  if(S){
+    $('placeNum').textContent = S.place ? ordinal(S.place)+' Place' : '—';
+    $('placeNote').textContent = S.division;
+    if(S.gap === null){ $('gapNum').textContent = '—'; $('gapNote').textContent = 'playoff spot'; }
+    else {
+      $('gapNum').textContent = (S.gap % 1 ? S.gap.toFixed(1) : S.gap)+' '+S.unit+(S.gap === 1 ? '' : 's')+(S.inside ? ' Clear' : ' Back');
+      $('gapNote').textContent = S.gapNote || (S.inside ? 'of first team out' : 'of playoff spot');
+    }
+    var o = S.odds;
+    if(o === null && S.record){              // a league table has no odds; its record stands in
+      $('oddsNum').textContent = S.record; $('oddsNote').textContent = 'W-D-L';
+    } else {
+      $('oddsNum').textContent = o === null ? '—' : o > 0 && o < 1 ? '<1%' : o > 99 && o < 100 ? '>99%' : Math.round(o)+'%';
+      // Hockey-Reference starts a season's odds once every team has played 10 games
+      $('oddsNote').textContent = o === null && T.feed.league === 'nhl' ? 'playoff odds · after 10 games' : 'playoff odds';
+    }
   }
-  var o = S.odds;
-  $('oddsNum').textContent = o === null ? '—' : o > 0 && o < 1 ? '<1%' : o > 99 && o < 100 ? '>99%' : Math.round(o)+'%';
-  // Hockey-Reference starts a season's odds once every team has played 10 games
-  $('oddsNote').textContent = o === null && T.feed.league === 'nhl' ? 'playoff odds · after 10 games' : 'playoff odds';
 
   var g0 = games.filter(function(g){ return !g.done; })[0];
   document.getElementById('next').innerHTML = !g0 ? '' :
     '<div class="lbl">Up next</div>'+
-    '<h2>'+side(g0)+esc(g0.oppPlace+' '+g0.oppName)+'</h2>'+
+    '<h2>'+side(g0)+esc((g0.oppPlace+' '+g0.oppName).trim())+'</h2>'+
     '<div class="when num">'+g0.p.wd+', '+g0.p.mon+' '+g0.p.day+' &middot; '+(g0.tbd ? 'Time TBD' : g0.p.time+' ET')+' &middot; '+esc(g0.venue)+'</div>'+
     (g0.tv ? '<div class="tv"><b>'+esc(g0.tv)+'</b></div>' : '');
 
@@ -376,7 +390,7 @@ function render(){
     if(b.type === 'story'){
       var a = b.a, isRead = read.has(a.id);
       return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
-        '</time><small>'+esc(a.p.time)+'</small></div>'+
+        '</time><small>'+esc(a.p.time)+(a.src ? ' &middot; '+esc(a.src) : '')+'</small></div>'+
         '<div class="body-col"><a class="story'+(isRead?' read':'')+'" data-id="'+esc(a.id)+'" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
         '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a></div></div>';
     }
@@ -385,8 +399,8 @@ function render(){
       '<time datetime="'+esc(g.date)+'">'+g.p.mon+' '+g.p.day+'</time><small>'+g.p.wd+'</small>'+
       '<span class="dot"></span></div><div class="body-col"><div class="band">'+
       '<div class="gno">'+esc(g.gno)+'</div>'+
-      '<div class="matchup"><div class="opp">'+side(g)+esc(g.oppPlace+' '+g.oppName)+'</div>'+
-      '<div class="meta">'+(g.pre?'Preseason &middot; ':'')+esc(g.venue)+(g.tv ? ' &middot; '+esc(g.tv) : '')+'</div></div>'+
+      '<div class="matchup"><div class="opp">'+side(g)+esc((g.oppPlace+' '+g.oppName).trim())+'</div>'+
+      '<div class="meta">'+(g.pre?'Preseason &middot; ':'')+(g.type === 4 ? esc(g.comp)+' &middot; ' : '')+esc(g.venue)+(g.tv ? ' &middot; '+esc(g.tv) : '')+'</div></div>'+
       '<div class="result"><span class="sc">'+g.ds+' <s>&ndash;</s> '+g.os+'</span>'+
       '<span class="pill '+g.cls+'">'+esc(g.pill)+'</span>'+
       (g.rec ? '<span class="after"><b>'+g.rec+'</b><small>record</small></span>' : '')+

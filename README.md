@@ -7,7 +7,8 @@ the next morning, the contract news that breaks on an off day.
 
 Live: https://kyeill.github.io/rss-feeds/ · repo: kyeill/rss-feeds
 
-Five tabs, in Kyle's order: **Tigers, Lions, Pistons, Red Wings, Cavaliers** —
+Eight tabs: **Tigers, Lions, Pistons, Red Wings, Cavaliers, Tottenham, Soccer,
+Power Rankings** (Michigan to come, multi-source). The first five —
 each The Athletic's own team feed (`nytimes.com/athletic/rss/<league>/<team>/`,
 URLs in `config.json`), filtered by the rules in Kyle's Sheet (below). Until
 2026-10-19 the feeds came through siftrss, which did the filtering. The Red
@@ -121,6 +122,32 @@ League Pass, then the team's own home/away listing (the Tigers' is
 "Tigers.TV"), then `localTv`: **TV20 Detroit** for the Pistons and **DAZN** for
 the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
 none — every NFL game has a network.
+
+## Tottenham, Soccer and Power Rankings (added 2026-10-19)
+
+**Tottenham** works like the other team tabs, from ESPN soccer: every
+competition is asked separately (`SOCCER_COMPS` — Premier League, League Cup,
+FA Cup, the three UEFA cups), each twice, because a team schedule gives played
+games by default and fixtures only with `fixture=true`. A competition the
+club isn't in answers empty, and the FA Cup answers 500 until the club's in
+the draw — both are skipped. League games are numbered `[n]`; cup games carry
+no number and name the competition in their meta line. Results are W / D / L
+(ESPN's winner flag, so a penalty-shootout cup tie reads right), the record is
+W-D-L. The standing reads ESPN's zone notes: in the relegation places it shows
+points **from safety**, otherwise points back of (or clear of) the Champions
+League places. No one publishes odds for a league table, so the third figure
+is the W-D-L record. TV: the English channel (NBC, USA Network, Peacock,
+Paramount+), never the Spanish one ESPN lists beside it.
+
+**Soccer** and **Power Rankings** are story-only tabs (`kind: "stories"`): no
+schedule, no table, no Up next. Each story carries its source label after the
+time ("USMNT", "NFL"). Soccer reads the USMNT feed (Atlanta United's Athletic
+feed address wasn't findable — waiting on Kyle's link). Power Rankings reads
+the four Detroit team feeds and keeps only headlines with "power rankings":
+the league feeds hold only a week or two of stories, but every ranking
+mentions every team, so the team feeds carry each one for months.
+`allRules: false` exempts it from the Sheet's "All" rows, which hide power
+rankings everywhere else.
 
 ## Leaving stories out: the rules Sheet
 

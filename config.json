@@ -46,6 +46,57 @@
       "localTv": "DAZN",
       "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/nba/cavaliers/"
+    },
+    {
+      "slug": "tottenham",
+      "short": "Tottenham",
+      "league": "epl",
+      "team": "367",
+      "source": "The Athletic",
+      "feed": "https://www.nytimes.com/athletic/rss/football/tottenham-hotspur/"
+    },
+    {
+      "slug": "soccer",
+      "short": "Soccer",
+      "kind": "stories",
+      "sources": [
+        {
+          "label": "USMNT",
+          "league": "soccer",
+          "feed": "https://www.nytimes.com/athletic/rss/football/usmnt/"
+        }
+      ]
+    },
+    {
+      "slug": "rankings",
+      "short": "Power Rankings",
+      "kind": "stories",
+      "allRules": false,
+      "include": [
+        "power rankings"
+      ],
+      "sources": [
+        {
+          "label": "MLB",
+          "league": "mlb",
+          "feed": "https://www.nytimes.com/athletic/rss/mlb/tigers/"
+        },
+        {
+          "label": "NFL",
+          "league": "nfl",
+          "feed": "https://www.nytimes.com/athletic/rss/nfl/lions/"
+        },
+        {
+          "label": "NBA",
+          "league": "nba",
+          "feed": "https://www.nytimes.com/athletic/rss/nba/pistons/"
+        },
+        {
+          "label": "NHL",
+          "league": "nhl",
+          "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/"
+        }
+      ]
     }
   ]
 }

@@ -134,11 +134,11 @@ def read_rules():
         return json.loads(RULES_CACHE.read_text(encoding="utf-8"))
 
 
-def hidden(article, team, rules):
+def hidden(article, team, rules, use_all=True):
     """Does any rule for this team (or All) hide this story? Matching ignores
     case and finds the words anywhere, so "NFL" also catches "NFL's"."""
     for rule in rules:
-        if rule["team"].lower() not in ("all", team.lower()):
+        if rule["team"].lower() not in (("all", team.lower()) if use_all else (team.lower(),)):
             continue
         text = (article["title"] + (" " + article["dek"] if rule["teaser"] else "")).lower()
         if any(w in text for w in rule["hide"]) and not any(w in text for w in rule["unless"]):
@@ -416,23 +416,166 @@ def espn_standing(league, abbrev, season, played):
     }
 
 
+# ---- Soccer: ESPN, one competition at a time ------------------------------
+
+# Every competition a club can play in a season. ESPN's soccer schedules are
+# per competition, and one the club isn't in answers with nothing (or, for
+# the FA Cup before January, a 500) -- both mean "no games here".
+SOCCER_COMPS = [("eng.1", "Premier League"), ("eng.league_cup", "League Cup"), ("eng.fa", "FA Cup"),
+                ("uefa.champions", "Champions League"), ("uefa.europa", "Europa League"),
+                ("uefa.europa.conf", "Conference League")]
+LEAGUE_COMP = "eng.1"
+
+# ESPN lists the Spanish-language channels alongside; Kyle watches in English.
+SPANISH = {"Universo", "Telemundo", "UniMás", "UniMas", "TUDN", "ESPN Deportes", "Peacock (Spanish)"}
+TV_NAMES = {"USA Net": "USA Network"}
+
+
+def soccer_tv(broadcasts):
+    """One channel: English TV first (NBC, USA), else English streaming (Peacock)."""
+    def name(b):
+        return (b.get("media") or {}).get("shortName") or ""
+    english = [b for b in broadcasts if name(b) and name(b) not in SPANISH]
+    english.sort(key=lambda b: (b.get("type") or {}).get("shortName") != "TV")
+    return TV_NAMES.get(name(english[0]), name(english[0])) if english else ""
+
+
+def soccer_schedule(team_id, season):
+    """Results and fixtures in every competition. A team schedule returns played
+    games by default and upcoming ones only with fixture=true, so each
+    competition is asked twice."""
+    games, seen = [], set()
+    for comp, comp_name in SOCCER_COMPS:
+        for extra in ("", "&fixture=true"):
+            url = (f"https://site.api.espn.com/apis/site/v2/sports/soccer/{comp}/teams/{team_id}/schedule"
+                   f"?season={season}{extra}")
+            try:
+                events = espn_json(url).get("events", [])
+            except Exception as err:          # the FA Cup 500s until its draw includes the club
+                print(f"  ({comp_name}: no schedule from ESPN -- {err})")
+                continue
+            for e in events:
+                if e["id"] in seen:
+                    continue
+                seen.add(e["id"])
+                comp_ = e["competitions"][0]
+                status = comp_["status"]["type"]
+                if status["name"] in ("STATUS_POSTPONED", "STATUS_CANCELED"):
+                    continue
+                us = next(c for c in comp_["competitors"] if c["team"]["id"] == str(team_id))
+                them = next(c for c in comp_["competitors"] if c is not us)
+                done = bool(status.get("completed"))
+                score = lambda c: int(float((c.get("score") or {}).get("value", (c.get("score") or {}).get("displayValue", 0)) or 0)) if done else None
+                # a cup tie level after extra time is settled on penalties: the winner flag says who
+                result = None
+                if done:
+                    result = "W" if us.get("winner") else "L" if them.get("winner") else "D"
+                start = e["date"] if len(e["date"]) > 17 else e["date"].replace("Z", ":00Z")
+                games.append({
+                    "id": e["id"],
+                    "date": start[:10],
+                    "startUTC": start,
+                    "tbd": comp_.get("timeValid") is False,
+                    "type": 2 if comp == LEAGUE_COMP else 4,      # 4: a cup game, unnumbered
+                    "comp": comp_name,
+                    "home": us.get("homeAway") == "home",
+                    "opp": them["team"].get("abbreviation", ""),
+                    "oppName": them["team"].get("shortDisplayName") or them["team"].get("displayName", ""),
+                    "oppPlace": "",
+                    "ds": score(us),
+                    "os": score(them),
+                    "result": result,
+                    "last": "PK" if done and "pen" in (status.get("detail") or "").lower() else None,
+                    "venue": (comp_.get("venue") or {}).get("fullName", ""),
+                    "tv": soccer_tv(comp_.get("broadcasts") or []),
+                })
+    games.sort(key=lambda g: g["startUTC"])
+    return games
+
+
+def soccer_standing(team_id, played):
+    """Place in the Premier League and distance to the line that matters, read
+    off ESPN's own zone notes: in the relegation places, points from safety
+    (the first place above them); elsewhere, points back of the last Champions
+    League place, or clear of the first team below it. No one publishes
+    playoff-style odds for a league table, so the record fills that slot."""
+    data = espn_json(f"https://site.api.espn.com/apis/v2/sports/soccer/{LEAGUE_COMP}/standings")
+    entries = data["children"][0]["standings"]["entries"]
+    rows = []
+    for e in entries:
+        st = {s.get("name"): s for s in e.get("stats", []) if s.get("name")}
+        num = lambda k: int(float((st.get(k) or {}).get("value") or 0))
+        rows.append({"id": e["team"]["id"], "rank": num("rank"), "pts": num("points"), "gp": num("gamesPlayed"),
+                     "w": num("wins"), "d": num("ties"), "l": num("losses"),
+                     "zone": ((e.get("note") or {}).get("description") or "")})
+    rows.sort(key=lambda r: r["rank"])
+    us = next(r for r in rows if r["id"] == str(team_id))
+    drop = [r for r in rows if "Relegation" in r["zone"]]
+    europe = [r for r in rows if "Champions League" in r["zone"]]
+    if us in drop:
+        safe = rows[rows.index(drop[0]) - 1]
+        gap, inside, note = safe["pts"] - us["pts"], False, "from safety"
+    elif us in europe:
+        first_out = rows[len(europe)]
+        gap, inside, note = us["pts"] - first_out["pts"], True, "of fifth place"
+    else:
+        gap, inside, note = europe[-1]["pts"] - us["pts"], False, "of Champions League"
+    current = abs(us["gp"] - played) <= 1
+    return {
+        "place": us["rank"] if current else None,
+        "division": "Premier League",
+        "inside": inside,
+        "gap": gap if current else None,
+        "unit": "Point",
+        "gapNote": note,
+        "odds": None,
+        "record": f"{us['w']}-{us['d']}-{us['l']}",
+    }
+
+
 # ---- seasons ---------------------------------------------------------------
 
 def season_for(league, today):
     """(first day of stories to keep, season id the schedule APIs want).
 
-    A season's stories start with its offseason: July 1 for hockey and
-    basketball (free agency), March 1 for football (the new league year),
-    November 1 for baseball (after the World Series)."""
+    A season's stories start with its offseason: July 1 for hockey,
+    basketball and soccer (free agency, the summer window), March 1 for
+    football (the new league year), November 1 for baseball (after the World
+    Series)."""
     y, m = today.year, today.month
-    if league in ("nhl", "nba"):
+    if league in ("nhl", "nba", "epl", "soccer"):
         start = y if m >= 7 else y - 1
-        return f"{start}-07-01", (int(f"{start}{start + 1}") if league == "nhl" else start + 1)
+        season = int(f"{start}{start + 1}") if league == "nhl" else start + 1 if league == "nba" else start
+        return f"{start}-07-01", season
     if league == "nfl":
         start = y if m >= 3 else y - 1
         return f"{start}-03-01", start
     season = y + 1 if m >= 11 else y
     return f"{season - 1}-11-01", season
+
+
+def story_tab(feed, rules):
+    """A tab of stories only -- no schedule, no table. Its sources are other
+    feeds, each labelled, each kept from its own league's season start; an
+    `include` list keeps only stories whose headline has one of its phrases
+    (the Power Rankings tab reads the four team feeds for "power rankings").
+    `allRules: false` exempts a tab from the "All" rows of the Sheet, which
+    would otherwise hide exactly what it collects."""
+    seen, articles = set(), []
+    include = [w.lower() for w in feed.get("include", [])]
+    for src in feed["sources"]:
+        since, _ = season_for(src["league"], dt.date.today())
+        for a in read_feed(src["feed"], since):
+            if a["id"] in seen:
+                continue
+            if include and not any(w in a["title"].lower() for w in include):
+                continue
+            seen.add(a["id"])
+            articles.append(a | {"src": src["label"]})
+    kept = [a for a in articles if not hidden(a, feed["short"], rules, feed.get("allRules", True))]
+    kept.sort(key=lambda a: a["iso"])
+    return kept, len(articles) - len(kept)
+
 
 def main():
     template = (HERE / "template.html").read_text(encoding="utf-8")
@@ -443,6 +586,12 @@ def main():
     feeds = []
     rules = read_rules()
     for feed in CONFIG["feeds"]:
+        if feed.get("kind") == "stories":
+            articles, dropped = story_tab(feed, rules)
+            feeds.append({k: feed[k] for k in ("slug", "short")}
+                         | {"league": "stories", "articles": articles, "games": [], "standing": None})
+            print(f"{feed['short']}: {len(articles)} stories ({dropped} hidden by rules)")
+            continue
         league, team, local_tv = feed["league"], feed["team"], feed.get("localTv", "")
         since, season = season_for(league, dt.date.today())
         articles = read_feed(feed["feed"], since)
@@ -450,11 +599,15 @@ def main():
         dropped, articles = len(articles) - len(kept), kept
         if league == "nhl":
             games = nhl_schedule(team, season, local_tv)
+        elif league == "epl":
+            games = soccer_schedule(team, season)
         else:
             games = espn_schedule(league, team, season, local_tv)
         played = len([g for g in games if g["ds"] is not None and g["type"] == 2])
         if league == "nhl":
             standing = nhl_standing(team, played)
+        elif league == "epl":
+            standing = soccer_standing(team, played)
         else:
             standing = espn_standing(league, team, season, played)
         feeds.append({k: feed[k] for k in ("slug", "short", "league")}
