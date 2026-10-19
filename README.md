@@ -232,7 +232,10 @@ says which stories to drop. Kyle edits it; the next hourly build applies it.
 | All | Headline | NHL, MLB, NFL, NBA | | league-wide pieces |
 | Lions | Headline | odds | | |
 
-- **Team** is a tab name (Tigers, Lions, Pistons, Red Wings, Cavaliers) or All.
+- **Team** is a tab name (Detroit Tigers, Cleveland Cavaliers, Tottenham
+  Hotspur...) or All. The short names from before the tabs were spelled out
+  (2026-10-19) still work -- Tigers, Lions, Pistons, Red Wings, Cavaliers,
+  Tottenham -- through each tab's `aka` list in config.json.
 - **Look in**: `Headline`, or `Headline or teaser` to search the one-line
   teaser too. The Athletic's feed carries no author or section, so headline
   and teaser are all there is.

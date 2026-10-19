@@ -65,7 +65,10 @@
     },
     {
       "slug": "tottenham",
-      "short": "Tottenham",
+      "short": "Tottenham Hotspur",
+      "aka": [
+        "Tottenham"
+      ],
       "league": "epl",
       "team": "367",
       "source": "The Athletic",
@@ -73,7 +76,10 @@
     },
     {
       "slug": "tigers",
-      "short": "Tigers",
+      "short": "Detroit Tigers",
+      "aka": [
+        "Tigers"
+      ],
       "league": "mlb",
       "team": "DET",
       "localTv": "Tigers.TV",
@@ -82,7 +88,10 @@
     },
     {
       "slug": "lions",
-      "short": "Lions",
+      "short": "Detroit Lions",
+      "aka": [
+        "Lions"
+      ],
       "league": "nfl",
       "team": "DET",
       "localTv": "",
@@ -91,7 +100,10 @@
     },
     {
       "slug": "pistons",
-      "short": "Pistons",
+      "short": "Detroit Pistons",
+      "aka": [
+        "Pistons"
+      ],
       "league": "nba",
       "team": "DET",
       "localTv": "TV20 Detroit",
@@ -100,7 +112,10 @@
     },
     {
       "slug": "redwings",
-      "short": "Red Wings",
+      "short": "Detroit Red Wings",
+      "aka": [
+        "Red Wings"
+      ],
       "league": "nhl",
       "team": "DET",
       "localTv": "Detroit SportsNet",
@@ -109,7 +124,10 @@
     },
     {
       "slug": "cavaliers",
-      "short": "Cavaliers",
+      "short": "Cleveland Cavaliers",
+      "aka": [
+        "Cavaliers"
+      ],
       "league": "nba",
       "team": "CLE",
       "localTv": "DAZN",

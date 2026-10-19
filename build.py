@@ -413,15 +413,16 @@ def read_rules():
         return json.loads(RULES_CACHE.read_text(encoding="utf-8"))
 
 
-def hidden(article, team, rules, use_all=True):
+def hidden(article, feed, rules, use_all=True):
     """Does any rule hide this story? A rule applies when its Team is this
-    tab, All (unless the tab opts out), or -- on a tab built from several
+    tab (its name, or an older name in its "aka" list -- "Tigers" still finds
+    "Detroit Tigers"), All (unless the tab opts out), or -- on a tab built from several
     feeds -- the story's own source label ("USMNT", "Atlanta"). Matching
     ignores case and finds the words anywhere, so "NFL" also catches "NFL's".
     A "*" in "Hide if it contains" matches every story, which turns that
     row's "Unless" list into a keep-only list. A story survives only if no
     row hides it, so two keep-only rows for one source must both be met."""
-    names = {team.lower(), (article.get("src") or "").lower()} - {""}
+    names = {n.lower() for n in [feed["short"], *feed.get("aka", []), article.get("src") or ""]} - {""}
     if use_all:
         names.add("all")
     for rule in rules:
@@ -998,7 +999,7 @@ def story_tab(feed, rules):
     for "power rankings"). `allRules: false` exempts a tab from the "All"
     rows of the Sheet, which would otherwise hide exactly what it collects."""
     articles = gather(feed["sources"], "soccer", [w.lower() for w in feed.get("include", [])])
-    kept = [a for a in articles if not hidden(a, feed["short"], rules, feed.get("allRules", True))]
+    kept = [a for a in articles if not hidden(a, feed, rules, feed.get("allRules", True))]
     kept.sort(key=lambda a: a["iso"])
     return kept, len(articles) - len(kept)
 
@@ -1047,7 +1048,7 @@ def main():
             articles = gather(feed["sources"], league)
         else:
             articles = [{k: v for k, v in a.items() if k != "_text"} for a in read_feed(feed["feed"], since)]
-        kept = [a for a in articles if not hidden(a, feed["short"], rules)]
+        kept = [a for a in articles if not hidden(a, feed, rules)]
         kept.sort(key=lambda a: a["iso"])
         dropped, articles = len(articles) - len(kept), kept
         if league == "nhl":
