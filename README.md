@@ -145,7 +145,18 @@ Football. There is no Athletic Michigan hockey feed, so Hockey is MGoBlog only.
   Checked on 21 posts. Women's basketball counts as basketball.
 - **MGoBlog keeps only its newest 10 posts**, about four days, so posts are
   remembered in `cache/archive/` (one JSON per feed, sport decided once,
-  400 days kept) and every build adds what's new.
+  400 days kept) and every build adds what's new. **History comes from Feedly**
+  (`read_feedly`, Kyle's reader, public stream API, newest 50 with full text —
+  back to Sept 25 on 2026-10-19), merged on every build. MGoBlog's robots.txt
+  disallows AI agents (ClaudeBot, ChatGPT-User), so its article pages are NOT
+  crawled for a backfill; posts before Feedly's 50 are simply not here.
+- **Headlines sort first**: MGoBlog's series names ("Michigan Hockey Game #",
+  "Michigan HockeyCast", "Hockey Season Preview", "Hoops Preview", "WBB …")
+  decide before any word count, because Feedly's copy of some posts carries
+  other posts' text (a hockey recap read as 49 football terms). Basketball
+  headline patterns are anchored at the start, so a mailbag that "Talks …
+  Hoops, and Hockey" stays mixed. The one known miss: a basketball "Portal
+  Hello" whose text names no basketball terms lands in Football.
 - **UMHoops comes from its WordPress REST API** (`/wp-json/wp/v2/posts`, up to
   300 posts since April 1): its firewall refuses the build at `/feed/` (Python's
   client and Windows' curl, whatever the user agent) but serves the site's own
