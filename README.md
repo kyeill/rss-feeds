@@ -30,8 +30,9 @@ every three hours and commits `docs/` when the feed has moved.
 
 ## The page
 
-A tab per feed across the top — **Red Wings (52)**, the number being unread
-stories; the count disappears at zero. The selected tab is the `#slug` in the
+A tab per team across the top — **Red Wings (52)**, the number being unread
+stories; the count disappears at zero. Kyle plans a couple more teams in the
+same format. The selected tab is the `#slug` in the
 address, so a tab can be bookmarked. Under it: record, points, the last-eight
 strip, the next game (opponent, time, arena, one TV network), then the timeline,
 newest first. There are no filters: every story and every game, preseason
@@ -45,9 +46,8 @@ generated summaries, which would need the paywalled article text).
 
 ## How a story finds its place
 
-Every story sits under the last finished game before it was filed, with a small
-line saying how long after ("12h after vs SJS 4–3", "3 days after at MTL").
-Gap labels between games count the stories filed in each break. Games carry the
+Every story sits under the last finished game before it was filed (a line
+saying how long after was removed at Kyle's request, 2026-10-18). Gap labels between games count the stories filed in each break. Games carry the
 record as it stood after them, so the standings move down the page with the
 stories. Preseason games show as `PS` and change no record.
 
@@ -60,8 +60,9 @@ broadcast for at all shows none.
 
 Opening a story marks it read, and the mark follows Kyle to every device. An
 unread story's date is red; once read, the date and headline turn grey, and the
-tab's count drops. (An "Unread only" filter and a "Mark all read" button existed
-briefly and went with the filter row.)
+tab's count drops. A "Mark all N Red Wings stories read" link in the footer
+clears the current tab after a confirm, and hides itself at zero. (An "Unread
+only" filter existed briefly and went with the filter row.)
 
 The page is static, so the list lives in an Apps Script web app,
 "RSS Feeds Read Sync", in Kyle's Google account (`apps-script/Code.js`, one

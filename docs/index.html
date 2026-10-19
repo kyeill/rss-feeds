@@ -82,7 +82,6 @@ header.tabs::-webkit-scrollbar{display:none}
 /* story: unread shows in its date; a read headline steps back */
 .story{display:block;padding:5px 0 13px;border-bottom:1px solid var(--line-soft)}
 .story:hover h3{color:var(--red-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
-.rel{display:block;margin-bottom:3px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .story h3{font-family:var(--ff-head);font-weight:500;font-size:19.5px;line-height:1.26;margin:0;text-wrap:balance}
 .story p{font-family:var(--ff-head);font-size:14.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;max-width:62ch}
 .story.read h3{color:var(--muted);font-weight:400}
@@ -117,6 +116,9 @@ header.tabs::-webkit-scrollbar{display:none}
 .chapter p{font-family:var(--ff-head);font-style:italic;color:var(--muted);margin:0;font-size:14.5px;max-width:58ch}
 .empty{padding:26px 0 0 122px;color:var(--muted);font-family:var(--ff-head);font-style:italic}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:6px 16px;flex-wrap:wrap}
+.linkbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:var(--red-ink);
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.linkbtn[hidden]{display:none}
 
 @media (max-width:620px){
   .feed::before{display:none}
@@ -151,6 +153,7 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   <div class="feed" id="feed" role="tabpanel"></div>
 
   <footer>
+    <button type="button" class="linkbtn" id="allRead" hidden></button>
     <span id="stamp"></span>
     <span id="syncNote"></span>
     <span>Games: NHL API</span>
@@ -205,17 +208,7 @@ function prep(feed){
   games.forEach(function(g){ if(!g.done && !g.pre){ nreg++; g.gno = 'G'+nreg; } });
 
   var arts = feed.articles.slice().sort(function(a,b){ return a.iso < b.iso ? -1 : 1; });
-  arts.forEach(function(a){
-    a.p = parts(a.iso);
-    var prev = null;
-    for(var i=0;i<games.length && games[i].p.t <= a.p.t;i++) prev = games[i];
-    var hrs = prev ? (a.p.t - prev.p.t)/36e5 : null;
-    var vs = prev ? (prev.home?'vs ':'at ')+prev.opp : '';
-    if(prev && prev.done && hrs <= 26) a.rel = Math.round(hrs)+'h after '+vs+' '+prev.ds+'–'+prev.os;
-    else if(prev && !prev.done) a.rel = 'after puck drop '+vs;
-    else if(prev){ var dd = dayDiff(prev.p, a.p); a.rel = (dd<=1 ? 'day after ' : dd+' days after ')+vs; }
-    else a.rel = 'before the first puck drop';
-  });
+  arts.forEach(function(a){ a.p = parts(a.iso); });
   return {feed:feed, games:games, played:played, arts:arts};
 }
 var TEAMS = D.feeds.map(prep);
@@ -289,6 +282,12 @@ function tabs(){
     return '<button type="button" role="tab" data-i="'+i+'" aria-selected="'+(i===cur)+'">'+esc(t.feed.short)+
       (n ? ' <span>('+n+')</span>' : '')+'</button>';
   }).join('');
+  var left = unreadIds().length, btn = document.getElementById('allRead');
+  btn.textContent = 'Mark all '+left+' '+TEAMS[cur].feed.short+' stories read';
+  btn.hidden = !left;
+}
+function unreadIds(){
+  return TEAMS[cur].arts.filter(function(a){ return !read.has(a.id); }).map(function(a){ return a.id; });
 }
 
 function render(){
@@ -348,7 +347,6 @@ function render(){
       return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
         '</time><small>'+esc(a.p.time)+'</small><span class="dot"></span></div>'+
         '<div class="body-col"><a class="story'+(isRead?' read':'')+'" data-id="'+esc(a.id)+'" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
-        '<span class="rel">'+esc(a.rel)+'</span>'+
         '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a></div></div>';
     }
     var g = b.g;
@@ -380,6 +378,10 @@ function opened(e){
 }
 document.getElementById('feed').addEventListener('click', opened);
 document.getElementById('feed').addEventListener('auxclick', opened);
+document.getElementById('allRead').addEventListener('click', function(){
+  var ids = unreadIds();
+  if(ids.length && confirm('Mark all '+ids.length+' '+TEAMS[cur].feed.short+' stories as read?')){ markRead(ids); render(); }
+});
 document.getElementById('tabs').addEventListener('click', function(e){
   var b = e.target.closest('button[data-i]');
   if(!b) return;
