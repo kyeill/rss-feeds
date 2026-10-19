@@ -45,7 +45,7 @@ newest first. There are no filters: every story and every game, preseason
 included.
 
 Kyle asked on 2026-10-18 for: no timing tags on stories, no filter row, no
-tagline, no trip or "then" commentary on Up next, `G#` game numbers, small
+tagline, no trip or "then" commentary on Up next, game numbers in brackets (`[8]`; preseason blank — first `G8`, changed the same night), small
 `vs`/`at`, overtime and shootout losses grey like any loss, and one TV network
 per game. The Athletic's own teaser stays as the summary (he chose that over
 generated summaries, which would need the paywalled article text).
@@ -53,12 +53,12 @@ generated summaries, which would need the paywalled article text).
 ## How a story finds its place
 
 Every story sits under the last finished game before it was filed (a line
-saying how long after was removed at Kyle's request, 2026-10-18). Gap labels between games count the stories filed in each break. Stories filed before
+saying how long after was removed at Kyle's request, 2026-10-18). Nothing is written between games (gap labels like "2 days between games · 3 stories" were removed at his request). Stories filed before
 the season's first game run on at the bottom with no heading (the "Offseason
 into camp" chapter was removed at Kyle's request, as were the footer's source
 credits). Games carry the
 record as it stood after them, so the standings move down the page with the
-stories. Preseason games show as `PS` and change no record.
+stories. Preseason games carry no number and change no record.
 
 **Playoff line:** each conference sends the top three of each division plus
 two wild cards. A team outside is as far back as the NEARER of its division's
@@ -85,7 +85,7 @@ games".
 
 Records: hockey W-L-OT, football W-L (W-L-T once there's a tie), baseball and
 basketball W-L. Results carry overtime ("W OT", "L SO", "L 2OT"); baseball's
-extra innings are not shown. Preseason games are `PS`, postseason `PO`, neither
+extra innings are not shown. Preseason games have a blank number, postseason `PO`, neither
 numbered nor counted. Postponed and cancelled games are dropped (the makeup is
 its own event). The timeline starts at the game the oldest story follows: a
 feed reaches back only ~100 stories, so the Tigers' tab begins in June rather
@@ -188,8 +188,6 @@ gitignored and lives only in the local folder.
 - **Times are Detroit's, not the browser's.** The feed publishes in GMT and
   the schedule in UTC; both are formatted through `America/Detroit` so a
   6am column does not read as 11am.
-- **The gap label counts the stories in it**, including "nothing filed" —
-  silence between games is information too.
 - **Nothing here knows what a story is about.** The tags are timing, not
   subject: a trade-request story filed an hour after a loss is tagged *Same
   night* like any recap.

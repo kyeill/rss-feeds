@@ -94,7 +94,7 @@ header.tabs::-webkit-scrollbar{display:none}
 .when-col time{display:block;font-family:var(--ff-score);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:var(--muted);font-variant-numeric:tabular-nums}
 .when-col small{display:block;font-size:10.5px;color:var(--muted);opacity:.85;font-variant-numeric:tabular-nums}
 .row.unread .when-col time{color:var(--accent-text)}
-/* only games sit on the spine; stories hang off it, indented to line up with the gap labels */
+/* only games sit on the spine; stories hang off it, indented clear of it */
 .dot{position:absolute;right:-7px;top:18px;width:13px;height:13px;border-radius:50%;background:var(--accent);border:1.5px solid var(--accent)}
 .row.game.pre .dot{background:var(--ice);border-color:var(--muted)}
 .body-col{padding:12px 0 12px 26px;min-width:0}
@@ -109,7 +109,7 @@ header.tabs::-webkit-scrollbar{display:none}
 
 /* game band */
 .row.game .body-col{padding-block:9px}
-.band{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:0 14px;
+.band{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:0 14px;
   background:var(--band);border:1px solid var(--line);border-radius:3px;padding:11px 14px}
 .row.game.win .band{background:var(--accent-wash);border-color:var(--accent)}
 .gno{font-family:var(--ff-score);font-weight:700;font-size:17px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
@@ -128,9 +128,6 @@ header.tabs::-webkit-scrollbar{display:none}
 .after b{display:block;font-family:var(--ff-score);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
 .after small{display:block;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 
-/* gap labels between games */
-.gap{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px 0 10px 122px}
-.gap hr{flex:1;height:0;border:0;border-top:1px solid var(--line-soft);min-width:12px}
 .empty{padding:26px 0 0 122px;color:var(--muted);font-family:var(--ff-head);font-style:italic}
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:6px 16px;flex-wrap:wrap}
 .linkbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:var(--accent-ink);
@@ -145,8 +142,8 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   .when-col small{display:inline}
   .dot{display:none}
   .body-col{padding-top:4px;padding-left:0}
-  .gap,.empty{padding-left:0}
-  .band{grid-template-columns:34px 1fr;gap:4px 12px}
+  .empty{padding-left:0}
+  .band{grid-template-columns:38px 1fr;gap:4px 10px}
   .result{grid-column:2;justify-self:start;margin-top:7px}
   .after{text-align:left;min-width:0;display:flex;gap:6px;align-items:baseline}
   .story h3{font-size:18px}
@@ -192,7 +189,6 @@ function parts(iso){
           time:o.hour+':'+o.minute+' '+String(o.dayPeriod||'').toLowerCase(),
           key:o.year+'-'+String(o.month).padStart(2,'0')+'-'+String(o.day).padStart(2,'0')};
 }
-function dayDiff(a,b){ return Math.round((new Date(b.key) - new Date(a.key))/864e5); }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function side(g){ return '<i>'+(g.home ? 'vs' : 'at')+'</i> '; }
@@ -218,9 +214,9 @@ function prep(feed){
       g.pill = g.tie ? 'T' : (g.won ? 'W' : 'L') + extra;
       g.cls = g.won ? 'w' : 'l';
     }
-    if(g.pre){ g.gno = 'PS'; return; }
+    if(g.pre){ g.gno = ''; return; }              // preseason: no number at all
     if(g.type === 3){ g.gno = 'PO'; return; }      // postseason: no game number, no record
-    n++; g.gno = 'G'+n;
+    n++; g.gno = '['+n+']';
     if(!g.done) return;
     if(g.won) w++; else if(g.tie) t++; else if(hockey && extra) o++; else l++;
     g.rec = hockey ? w+'-'+l+'-'+o : w+'-'+l+(t ? '-'+t : '');
@@ -375,22 +371,13 @@ function render(){
   var blocks = [];
   // stories from before the first game simply run on at the bottom, no heading
   arts.filter(function(a){ return !a.under; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
-  done.forEach(function(g, i){
-    if(i > 0){
-      var prevG = done[i-1];
-      var dd = dayDiff(prevG.p, g.p);
-      var cnt = arts.filter(function(a){ return a.under === prevG; }).length;
-      blocks.push({type:'gap', text:(dd <= 1 ? 'Back-to-back' : dd+' days between games') +
-        (cnt ? ' · '+cnt+' stor'+(cnt===1?'y':'ies') : ' · nothing filed')});
-    }
+  done.forEach(function(g){
     blocks.push({type:'game', g:g});
     arts.filter(function(a){ return a.under === g; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
   });
   blocks.reverse();                 // newest at the top
 
   document.getElementById('feed').innerHTML = blocks.map(function(b){
-    if(b.type === 'gap')
-      return '<div class="row"><div class="gap"><span class="lbl">'+esc(b.text)+'</span><hr></div></div>';
     if(b.type === 'story'){
       var a = b.a, isRead = read.has(a.id);
       return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
