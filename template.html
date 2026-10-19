@@ -58,6 +58,11 @@ h1 em{font-style:normal;color:var(--red)}
 .seg button span{font-variant-numeric:tabular-nums;opacity:.7;font-weight:500}
 .tog{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted)}
 .tog input{accent-color:var(--red);margin:0;width:15px;height:15px}
+.allread{appearance:none;margin-left:auto;background:var(--card);border:1px solid var(--line);border-radius:3px;cursor:pointer;
+  font-family:var(--ff-ui);font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink);padding:7px 11px;display:flex;gap:6px;align-items:center}
+.allread[hidden]{display:none}
+.allread span{color:var(--red-ink);font-variant-numeric:tabular-nums}
 
 /* up next */
 .next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--red);border-radius:3px;background:var(--card);padding:16px 18px}
@@ -90,6 +95,10 @@ h1 em{font-style:normal;color:var(--red)}
 .rel{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .story h3{font-family:var(--ff-head);font-weight:500;font-size:19.5px;line-height:1.26;margin:0;text-wrap:balance}
 .story p{font-family:var(--ff-head);font-size:14.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;max-width:62ch}
+/* read: the headline steps back; unread keeps a filled dot on the spine */
+.story.read h3{color:var(--muted);font-weight:400}
+.story.read p{opacity:.65}
+.row.unread .dot{background:var(--red);border-color:var(--red)}
 
 /* game band */
 .row.game .body-col{padding:9px 0}
@@ -160,6 +169,8 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
     </div>
     <label class="tog"><input type="checkbox" id="hidePre"> Hide preseason</label>
     <label class="tog"><input type="checkbox" id="oldest"> Oldest first</label>
+    <label class="tog"><input type="checkbox" id="unreadOnly"> Unread only</label>
+    <button type="button" class="allread" id="allRead" hidden>Mark all read <span id="cUnread"></span></button>
   </div>
 
   <section class="next" id="next"></section>
@@ -167,6 +178,7 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 
   <footer>
     <span id="stamp"></span>
+    <span id="syncNote"></span>
     <span>Games: NHL API</span>
     <span>Stories: The Athletic via siftrss</span>
   </footer>
@@ -268,12 +280,76 @@ arts.forEach(function(a){
   }
 });
 
+/* read state: opening a story marks it read, on every device.
+   The page is static, so the list lives in an Apps Script web app (apps-script/).
+   This browser keeps a copy so marks show instantly and survive being offline;
+   anything not yet acknowledged waits in `pending` and is retried. */
+var SYNC = '{{SYNC}}'.indexOf('http') === 0 ? '{{SYNC}}' : '';
+function load(k){ try{ return JSON.parse(localStorage.getItem(k) || '[]'); }catch(e){ return []; } }
+function save(k, set){ try{ localStorage.setItem(k, JSON.stringify(Array.from(set))); }catch(e){} }
+var read = new Set(load('rssf:read')), pending = new Set(load('rssf:pending'));
+var pushing = false;
+function note(t){ document.getElementById('syncNote').textContent = t; }
+var OFFLINE = 'Read list saved here; will sync when the connection is back';
+
+function markRead(ids){
+  var added = ids.filter(function(id){ return id && !read.has(id); });
+  added.forEach(function(id){ read.add(id); pending.add(id); });
+  if(added.length){ save('rssf:read', read); save('rssf:pending', pending); push(); }
+  return added.length;
+}
+function merge(ids){
+  var changed = false;
+  ids.forEach(function(id){ if(!read.has(id)){ read.add(id); changed = true; } });
+  save('rssf:read', read);
+  if(changed) build(); else counts();
+  note('Read list synced');
+}
+function push(){
+  if(!SYNC || pushing || !pending.size) return;
+  pushing = true;
+  var sent = Array.from(pending);
+  fetch(SYNC, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify({read:sent})})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(!j.ok) throw new Error(j.error);
+      sent.forEach(function(id){ pending.delete(id); });
+      save('rssf:pending', pending);
+      pushing = false;
+      merge(j.read);
+      push();                       // anything opened while that was in flight
+    })
+    .catch(function(){ pushing = false; note(OFFLINE); });
+}
+function pull(){
+  if(!SYNC){ note('Read list kept on this device only'); return; }
+  fetch(SYNC + '?op=get')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(!j.ok) throw new Error(j.error);
+      // a mark this browser has but the server doesn't was lost on the way: resend it
+      var srv = new Set(j.read);
+      read.forEach(function(id){ if(!srv.has(id)) pending.add(id); });
+      save('rssf:pending', pending);
+      merge(j.read);
+      push();
+    })
+    .catch(function(){ note(OFFLINE); });
+}
+function counts(){
+  var n = arts.filter(function(a){ return !read.has(a.id); }).length;
+  document.getElementById('cUnread').textContent = n;
+  document.getElementById('allRead').hidden = n === 0;
+}
+
 /* assemble: each game, then the stories filed before the next one */
 function build(){
   var filter = document.querySelector('.seg [aria-pressed="true"]').dataset.filter;
   var hidePre = document.getElementById('hidePre').checked;
   var oldestFirst = document.getElementById('oldest').checked;
-  var shown = arts.filter(function(a){ return filter === 'all' || a.kind === filter; });
+  var unreadOnly = document.getElementById('unreadOnly').checked;
+  var shown = arts.filter(function(a){
+    return (filter === 'all' || a.kind === filter) && !(unreadOnly && read.has(a.id)); });
   var blocks = [];
   var visible = games.filter(function(g){ return g.done && !(hidePre && g.pre); });
   // A story sits under the last game on the page before it, not necessarily the
@@ -295,7 +371,8 @@ function build(){
       var dd = dayDiff(prevG.p, g.p);
       var cnt = shown.filter(function(a){ return a.under === prevG; }).length;
       blocks.push({type:'gap', text:(dd <= 1 ? 'Back-to-back' : dd+' days between games') +
-        (cnt ? ' · '+cnt+' stor'+(cnt===1?'y':'ies') : ' · nothing filed')});
+        (cnt ? ' · '+cnt+(unreadOnly ? ' unread' : ' stor'+(cnt===1?'y':'ies'))
+             : (unreadOnly ? ' · nothing unread' : ' · nothing filed'))});
     }
     blocks.push({type:'game', g:g});
     shown.filter(function(a){ return a.under === g; }).forEach(function(a){ blocks.push({type:'story', a:a}); });
@@ -309,10 +386,10 @@ function build(){
     if(b.type === 'gap')
       return '<div class="row"><div class="gap"><span class="lbl">'+esc(b.text)+'</span><hr></div></div>';
     if(b.type === 'story'){
-      var a = b.a;
-      return '<div class="row"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
+      var a = b.a, isRead = read.has(a.id);
+      return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
         '</time><small>'+esc(a.p.time)+'</small><span class="dot"></span></div>'+
-        '<div class="body-col"><a class="story" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
+        '<div class="body-col"><a class="story'+(isRead?' read':'')+'" data-id="'+esc(a.id)+'" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
         '<span class="tags">'+(a.post?'<span class="tag post">'+esc(a.tagText)+'</span>':'')+
           (a.gameday?'<span class="tag day">Gameday</span>':'')+
           '<span class="rel">'+esc(a.rel)+'</span></span>'+
@@ -330,8 +407,28 @@ function build(){
       '<span class="pill '+g.cls+'">'+esc(g.pill)+'</span>'+
       (g.rec ? '<span class="after"><b>'+g.rec+'</b><small>record</small></span>' : '')+
       '</div></div></div></div>';
-  }).join('') || '<div class="row"><p class="empty">No stories match this filter.</p></div>';
+  }).join('') || '<div class="row"><p class="empty">'+(unreadOnly ? 'All caught up &mdash; nothing unread.' :
+    'No stories match this filter.')+'</p></div>';
+  counts();
 }
+
+// click, middle-click and the keyboard all open the link; any of them marks it read
+function opened(e){
+  var link = e.target.closest && e.target.closest('a.story');
+  if(!link || !markRead([link.dataset.id])) return;
+  link.classList.add('read');
+  link.closest('.row').classList.remove('unread');
+  counts();
+}
+document.getElementById('feed').addEventListener('click', opened);
+document.getElementById('feed').addEventListener('auxclick', opened);
+document.getElementById('allRead').addEventListener('click', function(){
+  var ids = arts.filter(function(a){ return !read.has(a.id); }).map(function(a){ return a.id; });
+  if(ids.length && confirm('Mark all '+ids.length+' unread stories as read?')){ markRead(ids); build(); }
+});
+document.getElementById('unreadOnly').addEventListener('change', build);
+// back from another app or tab: pick up whatever was read on the other device
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') pull(); });
 
 document.querySelectorAll('.seg button').forEach(function(btn){
   btn.addEventListener('click', function(){
@@ -349,5 +446,6 @@ var newest = arts[arts.length-1];
 document.getElementById('stamp').textContent = newest ?
   'Newest story '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET' : 'No stories yet this season';
 build();
+pull();
 })();
 </script>

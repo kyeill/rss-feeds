@@ -15,6 +15,7 @@ is the whole build; there is nothing slow enough to be worth keeping.
 
 import json
 import html
+import hashlib
 import re
 import pathlib
 import datetime as dt
@@ -35,6 +36,13 @@ def season_of(today):
     """The NHL season id for a date: 2026-10-18 and 2027-03-01 are both 20262027."""
     y = today.year if today.month >= 7 else today.year - 1
     return y, int(f"{y}{y + 1}")
+
+
+def story_id(link):
+    """A short, stable key for the read list. The Athletic's links carry their
+    own article number (/athletic/7699924/...); anything else is hashed."""
+    m = re.search(r"/athletic/(\d+)/", link)
+    return m.group(1) if m else hashlib.sha1(link.encode()).hexdigest()[:12]
 
 
 def read_feed(url, since):
@@ -63,6 +71,7 @@ def read_feed(url, since):
         seen.add(link)
         items.append(
             {
+                "id": story_id(link),
                 "title": tag("title"),
                 "dek": tag("description"),
                 "link": link,
@@ -126,6 +135,7 @@ def main():
             template.replace("{{PLACE}}", feed["place"])
             .replace("{{SHORT}}", feed["short"])
             .replace("{{SOURCE}}", feed["source"])
+            .replace("{{SYNC}}", CONFIG.get("sync", ""))
             .replace("{{DATA}}", data)
         )
         name = "index.html" if len(CONFIG["feeds"]) == 1 else f"{feed['slug']}.html"

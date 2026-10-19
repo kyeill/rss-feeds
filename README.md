@@ -19,6 +19,7 @@ schedule for Detroit.
 | `build.py` | reads each feed and that club's season, writes `docs/` |
 | `template.html` | the whole page — CSS and the script that lays out the timeline |
 | `docs/index.html` | the built page, committed, served by Pages from `main` |
+| `apps-script/` | the read-list web app the page syncs with (see below) |
 
 ```bash
 python build.py
@@ -42,7 +43,49 @@ tagged by how long after:
 Games carry the record as it stood after them, so the standings move down the
 page with the stories. Preseason games show as `PS` and change no record.
 
+## Read and unread
+
+Opening a story marks it read, and the mark follows Kyle to every device: the
+headline greys out and its dot on the spine empties. **Unread only** hides what
+he has read; **Mark all read** clears the backlog in one tap, after a confirm.
+
+The page is static, so the list lives in an Apps Script web app,
+"RSS Feeds Read Sync", in Kyle's Google account (`apps-script/Code.js`, one
+Script Property per story id). Its `/exec` address is `sync` in `config.json`;
+`build.py` writes it into the page. Each browser also keeps a copy in
+`localStorage`, so marks show at once and survive a dropped connection; any
+mark the server hasn't acknowledged is retried on the next load. The page
+re-reads the list whenever it comes back to the foreground. The footer says
+whether the last sync worked.
+
+Story ids are The Athletic's article number from the link (`/athletic/7699924/`),
+or a 12-character hash for any other source.
+
+Deploying a change to the script — clasp, from Claude's shell, never by hand:
+
+```bash
+export PATH="/c/Program Files/nodejs:/c/Users/kyleh/AppData/Roaming/npm:$PATH"
+clasp push -f
+clasp create-deployment -i AKfycbw8vFkELzj4_cTKh7vrQ55az3JtItkFBx_6PoCL20EJ5HnHCfomt4u75FrOKVrSgxh_2g -d "what changed"
+```
+
+`create-deployment -i` makes a new version and repoints the existing deployment,
+so the address in `config.json` never changes. `.clasp.json` (the script id) is
+gitignored and lives only in the local folder.
+
 ## Traps already paid for
+
+- **`clasp create-script` overwrites `appsscript.json`** with a bare default
+  that has no `webapp` block. Pushed like that, the web app would refuse every
+  call from the page. The manifest must keep `executeAs: USER_DEPLOYING` and
+  `access: ANYONE_ANONYMOUS`.
+- **The read list's address is public** — it is in the page. Anyone who reads
+  the source could see or change which stories are marked read. Accepted: it
+  holds nothing but article numbers. The script takes only short id strings,
+  at most 1000 per call, and drops marks older than 400 days.
+- **Clearing a mark on the server alone doesn't stick.** A browser that still
+  has it locally will resend it. To unmark for good, clear that browser's
+  site data too.
 
 - **Anchor on puck drop, not the calendar date.** A 7pm game and an 8pm story
   are the same night; by date alone a story filed at 00:30 would be stranded a
