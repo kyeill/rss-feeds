@@ -22,6 +22,7 @@ basketball use ESPN's.
 | `template.html` | the whole page — CSS and the script that lays out the timeline |
 | `docs/index.html` | the built page, committed, served by Pages from `main` |
 | `apps-script/` | the read-list web app the page syncs with (see below) |
+| `refresh-script/` | a second Apps Script project, "RSS Feeds Refresh", that starts the build every hour (see below) |
 | `icons.py` | draws the app icons into `docs/` (run by hand when the mark changes) |
 | `docs/manifest.webmanifest`, `docs/sw.js` | make it installable on a phone; hand-written, not built |
 
@@ -118,6 +119,26 @@ League Pass, then the team's own home/away listing (the Tigers' is
 "Tigers.TV"), then `localTv`: **TV20 Detroit** for the Pistons and **DAZN** for
 the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
 none — every NFL game has a network.
+
+## Hourly refresh
+
+GitHub has run this account's scheduled builds four to five hours late, or
+skipped them, since September 2026 — the night of 2026-10-18 only one of four
+three-hourly runs happened. A build started through GitHub's API runs at once,
+so **"RSS Feeds Refresh"** (`refresh-script/Code.js`, its own Apps Script
+project in Kyle's account) starts `build.yml` every hour from a time-driven
+trigger. The workflow's own cron stays as a backup.
+
+It needs a Script Property `GITHUB_TOKEN`: a fine-grained GitHub token scoped
+to `kyeill/rss-feeds` only, with **Actions: read and write** and nothing else.
+Kyle created and pasted it himself; it is not in the repo. `setup()`, run once
+from the editor, asks for permission, installs the trigger and starts one
+build. A failure throws, and Apps Script emails Kyle — that is how an expired
+token will show up: make a new token, paste it over the old value, done.
+
+It is a separate project from the read list on purpose: that one's Script
+Properties hold one entry per story read, and the token is easier to find,
+and to keep away from the public web app, on its own.
 
 ## Icon and install
 
