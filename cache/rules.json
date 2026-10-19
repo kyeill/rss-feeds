@@ -1,0 +1,45 @@
+[
+ {
+  "team": "All",
+  "teaser": false,
+  "hide": [
+   "nhl",
+   "mlb",
+   "nfl",
+   "nba"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Tigers",
+  "teaser": false,
+  "hide": [
+   "betting"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Tigers",
+  "teaser": false,
+  "hide": [
+   "how to watch"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Lions",
+  "teaser": false,
+  "hide": [
+   "how to watch"
+  ],
+  "unless": []
+ },
+ {
+  "team": "Lions",
+  "teaser": false,
+  "hide": [
+   "odds"
+  ],
+  "unless": []
+ }
+]

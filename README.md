@@ -8,7 +8,9 @@ the next morning, the contract news that breaks on an off day.
 Live: https://kyeill.github.io/rss-feeds/ · repo: kyeill/rss-feeds
 
 Five tabs, in Kyle's order: **Tigers, Lions, Pistons, Red Wings, Cavaliers** —
-each The Athletic's beat feed through siftrss (URLs in `config.json`). The Red
+each The Athletic's own team feed (`nytimes.com/athletic/rss/<league>/<team>/`,
+URLs in `config.json`), filtered by the rules in Kyle's Sheet (below). Until
+2026-10-19 the feeds came through siftrss, which did the filtering. The Red
 Wings came first (2026-10-18); the other four were added the same night under
 the same rules. Hockey uses the NHL's own API; baseball, football and
 basketball use ESPN's.
@@ -17,7 +19,7 @@ basketball use ESPN's.
 
 | file | what it does |
 | --- | --- |
-| `config.json` | the read-list address, and the feeds: tab name, league (`nhl` `mlb` `nfl` `nba`), team abbreviation, local TV channel, feed URL |
+| `config.json` | the read-list address, the rules Sheet, and the feeds: tab name, league (`nhl` `mlb` `nfl` `nba`), team abbreviation, local TV channel, feed URL |
 | `build.py` | reads each feed and that club's season, writes one page with a tab per feed |
 | `template.html` | the whole page — CSS and the script that lays out the timeline |
 | `docs/index.html` | the built page, committed, served by Pages from `main` |
@@ -119,6 +121,34 @@ League Pass, then the team's own home/away listing (the Tigers' is
 "Tigers.TV"), then `localTv`: **TV20 Detroit** for the Pistons and **DAZN** for
 the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
 none — every NFL game has a network.
+
+## Leaving stories out: the rules Sheet
+
+The **RSS** tab of Kyle's Google Sheet (`rules` in `config.json`, link-viewable)
+says which stories to drop. Kyle edits it; the next hourly build applies it.
+
+| Team | Look in | Hide if it contains | Unless it contains | Notes |
+| --- | --- | --- | --- | --- |
+| All | Headline | NHL, MLB, NFL, NBA | | league-wide pieces |
+| Lions | Headline | odds | | |
+
+- **Team** is a tab name (Tigers, Lions, Pistons, Red Wings, Cavaliers) or All.
+- **Look in**: `Headline`, or `Headline or teaser` to search the one-line
+  teaser too. The Athletic's feed carries no author or section, so headline
+  and teaser are all there is.
+- **Hide if it contains**: words or phrases, comma-separated; any one hides
+  the story. Case doesn't matter and it matches inside words ("NFL" catches
+  "NFL's", but "bet" would also catch "better").
+- **Unless it contains**: optional exceptions, comma-separated — e.g. hide
+  "NHL" unless "Red Wings" keeps the league pieces that are about Detroit.
+- A row with nothing in "Hide if it contains" is ignored, so notes rows are fine.
+
+The starting five rows were worked out from what siftrss had been dropping and
+reproduce it exactly (checked story by story on 2026-10-19). The header row
+must stay as it is: the build checks it, because a Sheet asked for a tab that
+isn't there answers with a different tab instead of an error. If the Sheet
+can't be read, the build uses the last good copy (`cache/rules.json`) and says
+so in its log; with no copy it stops rather than publish everything.
 
 ## Hourly refresh
 

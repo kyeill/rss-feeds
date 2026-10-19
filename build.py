@@ -2,8 +2,9 @@
 
 One page, a tab per feed. Sources, all public:
 
-  * the feeds (siftrss in front of The Athletic, which does not hand out its
-    own RSS any more) -- about a hundred items each, always the newest;
+  * The Athletic's own team feeds (nytimes.com/athletic/rss/<league>/<team>/),
+    200 items each, always the newest;
+  * Kyle's rules Sheet, which says which of those stories to leave out;
   * NHL: the league's own schedule and standings endpoints;
   * MLB, NFL, NBA: ESPN's team schedules, standings and (NFL, NBA) power
     index for playoff odds; MLB's odds ride along in its standings;
@@ -15,6 +16,8 @@ docs/index.html from template.html.
     python build.py
 """
 
+import csv
+import io
 import json
 import html
 import hashlib
@@ -76,6 +79,71 @@ def read_feed(url, since):
         )
     items.sort(key=lambda a: a["iso"])
     return items
+
+
+# ---- Kyle's rules: which stories to leave out ---------------------------------
+
+RULES_HEADER = ["Team", "Look in", "Hide if it contains", "Unless it contains", "Notes"]
+RULES_CACHE = HERE / "cache" / "rules.json"
+
+
+def read_rules():
+    """The rows of Kyle's rules Sheet, or the last good copy.
+
+    The rules are the "RSS" tab of Kyle's link-viewable Google Sheet: `rules`
+    in config.json is that tab's address, gid and all, read as CSV. Its header must be exactly RULES_HEADER: a
+    Google Sheet asked for something that isn't there answers with whatever
+    it has rather than an error, so a wrong header means a wrong sheet.
+
+    When the Sheet can't be read, the last good copy in cache/ is used and the
+    build says so; with no copy at all the build stops rather than publish
+    every story unfiltered.
+    """
+    url = CONFIG.get("rules")
+    try:
+        if not url:
+            raise ValueError("no rules Sheet in config.json")
+        sid = re.search(r"/d/([\w-]+)", url).group(1)
+        tab = re.search(r"gid=(\d+)", url)
+        gid = tab.group(1) if tab else "0"
+        rows = list(csv.reader(io.StringIO(fetch(
+            f"https://docs.google.com/spreadsheets/d/{sid}/export?format=csv&gid={gid}"))))
+        if not rows:
+            raise ValueError("the rules tab is empty")
+        if [c.strip() for c in rows[0][:len(RULES_HEADER)]] != RULES_HEADER:
+            raise ValueError(f"the first row should read {RULES_HEADER}, not {rows[0][:5]}")
+        rules = []
+        for r in rows[1:]:
+            r = [c.strip() for c in r] + [""] * len(RULES_HEADER)
+            hide = [w.strip().lower() for w in r[2].split(",") if w.strip()]
+            if not hide:
+                continue                      # a blank or note-only row
+            rules.append({
+                "team": r[0] or "All",
+                "teaser": "teaser" in r[1].lower(),
+                "hide": hide,
+                "unless": [w.strip().lower() for w in r[3].split(",") if w.strip()],
+            })
+        RULES_CACHE.parent.mkdir(exist_ok=True)
+        RULES_CACHE.write_text(json.dumps(rules, indent=1) + "\n", encoding="utf-8")
+        return rules
+    except Exception as err:
+        if not RULES_CACHE.exists():
+            raise SystemExit(f"rules Sheet unreadable ({err}) and no saved copy -- not publishing unfiltered")
+        print(f"  ! rules Sheet unreadable ({err}); using the copy saved in cache/rules.json")
+        return json.loads(RULES_CACHE.read_text(encoding="utf-8"))
+
+
+def hidden(article, team, rules):
+    """Does any rule for this team (or All) hide this story? Matching ignores
+    case and finds the words anywhere, so "NFL" also catches "NFL's"."""
+    for rule in rules:
+        if rule["team"].lower() not in ("all", team.lower()):
+            continue
+        text = (article["title"] + (" " + article["dek"] if rule["teaser"] else "")).lower()
+        if any(w in text for w in rule["hide"]) and not any(w in text for w in rule["unless"]):
+            return True
+    return False
 
 
 def nhl_standing(abbrev, played):
@@ -373,10 +441,13 @@ def main():
 
     # One page, a tab per feed, in config order.
     feeds = []
+    rules = read_rules()
     for feed in CONFIG["feeds"]:
         league, team, local_tv = feed["league"], feed["team"], feed.get("localTv", "")
         since, season = season_for(league, dt.date.today())
         articles = read_feed(feed["feed"], since)
+        kept = [a for a in articles if not hidden(a, feed["short"], rules)]
+        dropped, articles = len(articles) - len(kept), kept
         if league == "nhl":
             games = nhl_schedule(team, season, local_tv)
         else:
@@ -389,7 +460,7 @@ def main():
         feeds.append({k: feed[k] for k in ("slug", "short", "league")}
                      | {"articles": articles, "games": games, "standing": standing})
         print(
-            f"{feed['short']}: {len(articles)} stories since {since}, "
+            f"{feed['short']}: {len(articles)} stories since {since} ({dropped} hidden by rules), "
             f"{played} of {len([g for g in games if g['type'] == 2])} games played\n  {standing}"
         )
     data = json.dumps(

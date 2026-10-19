@@ -1,5 +1,6 @@
 {
   "sync": "https://script.google.com/macros/s/AKfycbw8vFkELzj4_cTKh7vrQ55az3JtItkFBx_6PoCL20EJ5HnHCfomt4u75FrOKVrSgxh_2g/exec",
+  "rules": "https://docs.google.com/spreadsheets/d/1v9ErfF8bZ-jpboTz6cHth1sZf8VlCQa2DOufH74OJmk/edit?gid=1881768788",
   "feeds": [
     {
       "slug": "tigers",
@@ -8,7 +9,7 @@
       "team": "DET",
       "localTv": "Tigers.TV",
       "source": "The Athletic",
-      "feed": "https://www.siftrss.com/f/r1DrAwLJqJ"
+      "feed": "https://www.nytimes.com/athletic/rss/mlb/tigers/"
     },
     {
       "slug": "lions",
@@ -17,7 +18,7 @@
       "team": "DET",
       "localTv": "",
       "source": "The Athletic",
-      "feed": "https://www.siftrss.com/f/1qXJJ0AXWd"
+      "feed": "https://www.nytimes.com/athletic/rss/nfl/lions/"
     },
     {
       "slug": "pistons",
@@ -26,7 +27,7 @@
       "team": "DET",
       "localTv": "TV20 Detroit",
       "source": "The Athletic",
-      "feed": "https://www.siftrss.com/f/oDro6LlaVm"
+      "feed": "https://www.nytimes.com/athletic/rss/nba/pistons/"
     },
     {
       "slug": "redwings",
@@ -35,7 +36,7 @@
       "team": "DET",
       "localTv": "Detroit SportsNet",
       "source": "The Athletic",
-      "feed": "https://siftrss.com/f/Jz69b6rknd9"
+      "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/"
     },
     {
       "slug": "cavaliers",
@@ -44,7 +45,7 @@
       "team": "CLE",
       "localTv": "DAZN",
       "source": "The Athletic",
-      "feed": "https://www.siftrss.com/f/7yJ8qZLnyB"
+      "feed": "https://www.nytimes.com/athletic/rss/nba/cavaliers/"
     }
   ]
 }
