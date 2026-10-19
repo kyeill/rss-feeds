@@ -17,6 +17,7 @@ docs/index.html from template.html.
 """
 
 import csv
+import email.utils
 import io
 import json
 import html
@@ -60,31 +61,125 @@ def read_feed(url, since):
         pub = tag("pubDate")
         if not pub:
             continue
-        # RSS dates are RFC 822 and always land in GMT here
-        when = dt.datetime.strptime(pub, "%a, %d %b %Y %H:%M:%S %Z").replace(
-            tzinfo=dt.timezone.utc
-        )
+        # RFC 822 dates: The Athletic writes "GMT", MGoBlog and UMHoops "+0000"
+        when = email.utils.parsedate_to_datetime(pub).astimezone(dt.timezone.utc)
         link = tag("link")
         if when.date().isoformat() < since or link in seen:
             continue
         seen.add(link)
+        title = tag("title")
+        text = plain(tag("description") + " " + tag("content:encoded"))
         items.append(
             {
                 "id": story_id(link),
-                "title": tag("title"),
-                "dek": tag("description"),
+                "title": title,
+                "dek": teaser(title, plain(tag("description"))),
                 "link": link,
                 "iso": when.isoformat(),
+                "_text": text,           # for sorting MGoBlog by sport; never published
             }
         )
     items.sort(key=lambda a: a["iso"])
     return items
 
 
+def plain(markup):
+    """Markup to one line of text."""
+    text = html.unescape(re.sub(r"<[^>]+>", " ", markup))
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def teaser(title, text):
+    """A one- or two-line teaser. The Athletic's descriptions already are one;
+    MGoBlog's carry the whole post, led by its title and byline ("Brian October
+    16th, 2026 at 2:57 PM"), and UMHoops' end "The post ... appeared first on
+    UMHoops." All of that goes, and anything long is cut at a word."""
+    if text.startswith(title):
+        text = text[len(title):].strip()
+    m = re.match(r".{0,80}?\b\w+ \d{1,2}(?:st|nd|rd|th), \d{4} at \d{1,2}:\d{2} [AP]M\s*", text)
+    if m:
+        text = text[m.end():]
+    text = re.sub(r"\s*The post .* appeared first on .*$", "", text)
+    if len(text) > 240:
+        text = text[:240].rsplit(" ", 1)[0].rstrip(",;:") + "\u2026"
+    return text
+
+
 # ---- Kyle's rules: which stories to leave out ---------------------------------
 
 RULES_HEADER = ["Team", "Look in", "Hide if it contains", "Unless it contains", "Notes"]
 RULES_CACHE = HERE / "cache" / "rules.json"
+
+
+BASKETBALL = re.compile(r"basketball|hoops|rebound|three-pointer|3-pointer|\bthrees\b|free throw|layup|dunk|kenpom|"
+                        r"torvik|crisler|sweet 16|elite eight|final four|point guard|\bwbb\b|jumper|and-one|\bpaint\b|"
+                        r"backcourt|frontcourt|shot clock|\bbpi\b")
+FOOTBALL = re.compile(r"football|touchdown|quarterback|\bqb\b|\byards\b|rushing|passing game|\bsack|linebacker|"
+                      r"cornerback|\bpunt|field goal|offensive line|defensive line|big house|tailback|receiver|"
+                      r"interception|fumble|first down|play-action|\bsnap|line of scrimmage|end zone")
+HOCKEY = re.compile(r"hockey|goalie|power play|penalty kill|\bpuck|faceoff|shots on goal|blue line|yost|\bncha\b|\bccha\b")
+
+
+def is_basketball(title, text):
+    """Is an MGoBlog post purely basketball? Its feed has no categories, but it
+    carries the whole post, so count terms only one sport uses. A post counts
+    as basketball when it has some (a "Hoops"/"WBB" headline counts double)
+    and next to no football or hockey -- hockey shares "rebound" and "paint".
+    Checked on 21 posts on 2026-10-19: hoops previews and recaps, a women's
+    basketball preview and "Exit Dusty May" in; football recaps, the mixed
+    mailbag, podcasts, hockey and softball out."""
+    t = (title + " " + text).lower()
+    bb = len(BASKETBALL.findall(t)) + (10 if re.match(r"(hoops|wbb|basketball)\b", title.lower()) else 0)
+    return bb >= 3 and len(FOOTBALL.findall(t)) <= bb * 0.15 and len(HOCKEY.findall(t)) <= bb * 0.2
+
+
+ARCHIVE = HERE / "cache" / "archive"
+
+
+def remembered(src, items):
+    """A feed that only holds its newest few posts (MGoBlog keeps 10, UMHoops 6)
+    would lose a story off the page within days, so these feeds' posts are kept
+    in cache/archive/, one file per feed, and every build adds what's new. Each
+    post's sport is decided once, while its full text is at hand."""
+    ARCHIVE.mkdir(parents=True, exist_ok=True)
+    path = ARCHIVE / (re.sub(r"\W+", "-", src["feed"].split("//", 1)[1]).strip("-") + ".json")
+    kept = {a["id"]: a for a in (json.loads(path.read_text(encoding="utf-8")) if path.exists() else [])}
+    for a in items:
+        kept[a["id"]] = {k: v for k, v in a.items() if k != "_text"} | {"bb": is_basketball(a["title"], a["_text"])}
+    cutoff = (dt.date.today() - dt.timedelta(days=400)).isoformat()
+    out = sorted((a for a in kept.values() if a["iso"] >= cutoff), key=lambda a: a["iso"])[-800:]
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
+    return out
+
+
+def gather(sources, league, include=()):
+    """Stories from several feeds, each labelled with its source, newest kept
+    from the season's start, a story in two feeds kept once (first source
+    wins). `sport` keeps only MGoBlog's basketball posts, or all but them."""
+    seen, articles = set(), []
+    for src in sources:
+        since, _ = season_for(src.get("league", league), dt.date.today())
+        try:
+            items = read_feed(src["feed"], since)
+        except Exception as err:
+            # one source down shouldn't blank a section; an archived one keeps what it had
+            print(f"  ! {src['label']} unreadable ({err}); skipped this run")
+            items = []
+        if src.get("archive"):
+            items = [a for a in remembered(src, items) if a["iso"][:10] >= since]
+        for a in items:
+            if a["id"] in seen:
+                continue
+            if include and not any(w in a["title"].lower() for w in include):
+                continue
+            bb = a.get("bb") if "bb" in a else is_basketball(a["title"], a.get("_text", ""))
+            if src.get("sport") == "basketball" and not bb:
+                continue
+            if src.get("sport") == "not-basketball" and bb:
+                continue
+            seen.add(a["id"])
+            articles.append({k: v for k, v in a.items() if k not in ("_text", "bb")} | {"src": src["label"]})
+    return articles
 
 
 def read_rules():
@@ -276,7 +371,8 @@ def nhl_schedule(abbrev, season, local_tv):
 
 # ---- MLB, NFL, NBA: ESPN ---------------------------------------------------
 
-ESPN = {"mlb": "baseball/mlb", "nfl": "football/nfl", "nba": "basketball/nba"}
+ESPN = {"mlb": "baseball/mlb", "nfl": "football/nfl", "nba": "basketball/nba",
+        "cfb": "football/college-football", "cbb": "basketball/mens-college-basketball"}
 
 # How many teams per conference (league, for MLB) make the playoffs, and
 # whether winning the division guarantees a place. The NBA's line is the top
@@ -319,7 +415,7 @@ def espn_schedule(league, abbrev, season, local_tv):
             status = comp["status"]["type"]
             if status["name"] in ("STATUS_POSTPONED", "STATUS_CANCELED"):
                 continue                      # the makeup date is its own event
-            us = next(c for c in comp["competitors"] if c["team"]["abbreviation"] == abbrev)
+            us = next(c for c in comp["competitors"] if abbrev in (c["team"]["abbreviation"], c["team"]["id"]))
             them = next(c for c in comp["competitors"] if c is not us)
             done = bool(status.get("completed"))
             score = lambda c: int((c.get("score") or {}).get("value", 0)) if done else None
@@ -336,8 +432,11 @@ def espn_schedule(league, abbrev, season, local_tv):
                 "type": seasontype,
                 "home": home,
                 "opp": them["team"]["abbreviation"],
-                "oppName": them["team"].get("name") or them["team"].get("shortDisplayName", ""),
-                "oppPlace": them["team"].get("location", ""),
+                # pros read city + nickname ("Phoenix" "Suns"); a college team is just
+                # its school ("Penn State"), which ESPN puts in location
+                "oppName": them["team"].get("location", "") if league in COLLEGE
+                           else them["team"].get("name") or them["team"].get("shortDisplayName", ""),
+                "oppPlace": "" if league in COLLEGE else them["team"].get("location", ""),
                 "ds": score(us),
                 "os": score(them),
                 "last": last,
@@ -541,6 +640,65 @@ def soccer_standing(team_id, played):
     }
 
 
+# ---- College: Michigan in the Big Ten ----------------------------------------
+
+COLLEGE = {"cfb": 5, "cbb": 7}       # ESPN's group id for the Big Ten in each sport
+
+
+def college_standing(league, team_id, season, played):
+    """Place in the Big Ten and games behind first (or, for the leader, games
+    clear of second), from ESPN's conference table: its playoffSeed is the
+    conference rank, its gamesBehind the distance to first. Football's third
+    figure is ESPN FPI's playoff odds (the CFP); basketball has no public odds,
+    so its record stands in. ESPN keeps last season's table until games are
+    played -- basketball's showed 2025-26 in October -- so a table whose games
+    don't match the schedule's shows dashes, like the NBA's."""
+    data = espn_json(f"https://site.api.espn.com/apis/v2/sports/{ESPN[league]}/standings?group={COLLEGE[league]}")
+    rows = []
+    for e in data["standings"]["entries"]:
+        st = {x.get("name") or x.get("type"): x for x in e.get("stats", [])}
+        disp = lambda k: (st.get(k) or {}).get("displayValue") or ""
+        wl = lambda k: [int(n) for n in re.findall(r"\d+", disp(k))[:2]] or [0, 0]
+        rows.append({"id": e["team"]["id"], "seed": int(float((st.get("playoffSeed") or {}).get("value") or 99)),
+                     "gb": disp("gamesBehind"), "overall": wl("overall"), "conf": wl("vs. Conf."),
+                     "overallText": disp("overall")})
+    rows.sort(key=lambda r: r["seed"])
+    us = next(r for r in rows if r["id"] == str(team_id))
+    current = abs(sum(us["overall"]) - played) <= 1
+    if us["gb"] in ("-", "", "0"):
+        second = next((r for r in rows if r is not us), None)
+        gap = ((us["conf"][0] - second["conf"][0]) + (second["conf"][1] - us["conf"][1])) / 2 if second else None
+        inside, note = True, "of second place"
+    else:
+        gap, inside, note = float(us["gb"]), False, "of first place"
+    if gap is not None and gap == int(gap):
+        gap = int(gap)
+    third = None
+    odds = None
+    if league == "cfb":
+        pi = espn_json(f"https://site.web.api.espn.com/apis/fitt/v3/sports/{ESPN[league]}/powerindex")
+        if (pi.get("currentSeason") or {}).get("year") == season:
+            names = {c["name"]: c["names"] for c in pi.get("categories", [])}
+            for t in pi.get("teams", []):
+                if t["team"]["id"] == str(team_id):
+                    for c in t.get("categories", []):
+                        v = dict(zip(names.get(c["name"], []), c.get("values", []))).get("probmakeplayoffs")
+                        if isinstance(v, (int, float)):
+                            odds = float(v)
+    else:
+        third = {"big": us["overallText"] if current else "\u2014", "note": "record"}
+    return {
+        "place": us["seed"] if current else None,
+        "division": "Big Ten",
+        "inside": inside,
+        "gap": gap if current else None,
+        "unit": "Game",
+        "gapNote": note,
+        "odds": odds,
+        "third": third,
+    }
+
+
 # ---- seasons ---------------------------------------------------------------
 
 def season_for(league, today):
@@ -558,28 +716,23 @@ def season_for(league, today):
     if league == "nfl":
         start = y if m >= 3 else y - 1
         return f"{start}-03-01", start
+    if league == "cfb":                 # from signing day; ESPN names the season by its fall
+        start = y if m >= 2 else y - 1
+        return f"{start}-02-01", start
+    if league == "cbb":                 # from the transfer portal; ESPN names it by its spring
+        start = y if m >= 4 else y - 1
+        return f"{start}-04-01", start + 1
     season = y + 1 if m >= 11 else y
     return f"{season - 1}-11-01", season
 
 
 def story_tab(feed, rules):
     """A tab of stories only -- no schedule, no table. Its sources are other
-    feeds, each labelled, each kept from its own league's season start; an
-    `include` list keeps only stories whose headline has one of its phrases
-    (the Power Rankings tab reads the four team feeds for "power rankings").
-    `allRules: false` exempts a tab from the "All" rows of the Sheet, which
-    would otherwise hide exactly what it collects."""
-    seen, articles = set(), []
-    include = [w.lower() for w in feed.get("include", [])]
-    for src in feed["sources"]:
-        since, _ = season_for(src["league"], dt.date.today())
-        for a in read_feed(src["feed"], since):
-            if a["id"] in seen:
-                continue
-            if include and not any(w in a["title"].lower() for w in include):
-                continue
-            seen.add(a["id"])
-            articles.append(a | {"src": src["label"]})
+    feeds, each labelled; an `include` list keeps only stories whose headline
+    has one of its phrases (the Power Rankings tab reads the four team feeds
+    for "power rankings"). `allRules: false` exempts a tab from the "All"
+    rows of the Sheet, which would otherwise hide exactly what it collects."""
+    articles = gather(feed["sources"], "soccer", [w.lower() for w in feed.get("include", [])])
     kept = [a for a in articles if not hidden(a, feed["short"], rules, feed.get("allRules", True))]
     kept.sort(key=lambda a: a["iso"])
     return kept, len(articles) - len(kept)
@@ -602,13 +755,19 @@ def main():
             continue
         league, team, local_tv = feed["league"], feed["team"], feed.get("localTv", "")
         since, season = season_for(league, dt.date.today())
-        articles = read_feed(feed["feed"], since)
+        if "sources" in feed:
+            articles = gather(feed["sources"], league)
+        else:
+            articles = [{k: v for k, v in a.items() if k != "_text"} for a in read_feed(feed["feed"], since)]
         kept = [a for a in articles if not hidden(a, feed["short"], rules)]
+        kept.sort(key=lambda a: a["iso"])
         dropped, articles = len(articles) - len(kept), kept
         if league == "nhl":
             games = nhl_schedule(team, season, local_tv)
         elif league == "epl":
             games = soccer_schedule(team, season)
+        elif league in COLLEGE:
+            games = espn_schedule(league, team, season, local_tv)
         else:
             games = espn_schedule(league, team, season, local_tv)
         played = len([g for g in games if g["ds"] is not None and g["type"] == 2])
@@ -616,6 +775,8 @@ def main():
             standing = nhl_standing(team, played)
         elif league == "epl":
             standing = soccer_standing(team, played)
+        elif league in COLLEGE:
+            standing = college_standing(league, team, season, played)
         else:
             standing = espn_standing(league, team, season, played)
         feeds.append({k: feed[k] for k in ("slug", "short", "league")}

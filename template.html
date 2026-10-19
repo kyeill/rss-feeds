@@ -31,6 +31,7 @@
 /* each tab wears its team's colour; the Red Wings' red is the default above.
    --accent fills, --accent-text is the same hue light enough to read as text,
    --on-accent is the text on a filled pill. */
+[data-team="mfootball"],[data-team="mbasketball"]{--accent:#ffcb05; --accent-text:#ffd437; --accent-ink:#ffe073; --accent-wash:#221d06; --on-accent:#00274c;}
 [data-team="redwings"]{--accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;}
 [data-team="tigers"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
 [data-team="lions"]{--accent:#3aa0e0; --accent-text:#4fb0ee; --accent-ink:#74c2f2; --accent-wash:#0f1d28; --on-accent:#0d1013;}
@@ -376,7 +377,9 @@ function render(){
       $('gapNote').textContent = S.gapNote || (S.inside ? 'of first team out' : 'of playoff spot');
     }
     var o = S.odds;
-    if(o === null && S.record){              // a league table has no odds; its record stands in
+    if(S.third){                             // a figure the build chose (college basketball's record)
+      $('oddsNum').textContent = S.third.big; $('oddsNote').textContent = S.third.note;
+    } else if(o === null && S.record){              // a league table has no odds; its record stands in
       $('oddsNum').textContent = S.record; $('oddsNote').textContent = 'W-D-L';
     } else {
       $('oddsNum').textContent = o === null ? '—' : o > 0 && o < 1 ? '<1%' : o > 99 && o < 100 ? '>99%' : Math.round(o)+'%';

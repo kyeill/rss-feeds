@@ -3,6 +3,44 @@
   "rules": "https://docs.google.com/spreadsheets/d/1v9ErfF8bZ-jpboTz6cHth1sZf8VlCQa2DOufH74OJmk/edit?gid=1881768788",
   "feeds": [
     {
+      "slug": "mfootball",
+      "short": "Michigan Football",
+      "league": "cfb",
+      "team": "130",
+      "localTv": "",
+      "sources": [
+        {
+          "label": "The Athletic",
+          "feed": "https://www.nytimes.com/athletic/rss/college-football/michigan-wolverines-college-football/"
+        },
+        {
+          "label": "MGoBlog",
+          "feed": "https://mgoblog.com/fbfeed",
+          "archive": true,
+          "sport": "not-basketball"
+        }
+      ]
+    },
+    {
+      "slug": "mbasketball",
+      "short": "Michigan Basketball",
+      "league": "cbb",
+      "team": "130",
+      "localTv": "",
+      "sources": [
+        {
+          "label": "The Athletic",
+          "feed": "https://www.nytimes.com/athletic/rss/college-basketball/michigan-wolverines-college-basketball/"
+        },
+        {
+          "label": "MGoBlog",
+          "feed": "https://mgoblog.com/fbfeed",
+          "archive": true,
+          "sport": "basketball"
+        }
+      ]
+    },
+    {
       "slug": "tottenham",
       "short": "Tottenham",
       "league": "epl",
