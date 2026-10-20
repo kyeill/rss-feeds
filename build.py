@@ -339,7 +339,8 @@ def gather(sources, league, include=()):
     wins). `sport` keeps only MGoBlog's basketball posts, or all but them.
     A source's own `include` replaces the section's -- The Briefing comes from
     the whole-football feed, which only its matches should be taken from (and
-    archived: that feed holds about ten days)."""
+    archived: that feed holds about ten days). A source's `palette` names the
+    tab whose colours its unread dates borrow (Power Rankings' NFL in Lions blue)."""
     seen, articles = set(), []
     for src in sources:
         since, _ = season_for(src.get("league", league), dt.date.today())
@@ -367,7 +368,8 @@ def gather(sources, league, include=()):
             if src.get("sport") and (a.get("sport") or sport_of(a["title"], a.get("_text", ""))) != src["sport"]:
                 continue
             seen.add(a["id"])
-            articles.append({k: v for k, v in a.items() if k not in ("_text", "bb", "sport")} | {"src": src["label"]})
+            articles.append({k: v for k, v in a.items() if k not in ("_text", "bb", "sport")} | {"src": src["label"]}
+                            | ({"pal": src["palette"]} if src.get("palette") else {}))
     return articles
 
 

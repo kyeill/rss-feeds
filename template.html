@@ -432,7 +432,7 @@ function render(){
   document.getElementById('feed').innerHTML = blocks.map(function(b){
     if(b.type === 'story'){
       var a = b.a, isRead = read.has(a.id);
-      return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
+      return '<div class="row'+(isRead?'':' unread')+'"'+(a.pal ? ' data-team="'+esc(a.pal)+'"' : '')+'><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
         '</time><small>'+esc(a.p.time)+(a.src ? ' &middot; '+esc(a.src) : '')+'</small></div>'+
         '<div class="body-col"><a class="story'+(isRead?' read':'')+'" data-id="'+esc(a.id)+'" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
         '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a>'+

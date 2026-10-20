@@ -163,22 +163,26 @@
         {
           "label": "MLB",
           "league": "mlb",
-          "feed": "https://www.nytimes.com/athletic/rss/mlb/tigers/"
+          "feed": "https://www.nytimes.com/athletic/rss/mlb/tigers/",
+          "palette": "tigers"
         },
         {
           "label": "NFL",
           "league": "nfl",
-          "feed": "https://www.nytimes.com/athletic/rss/nfl/lions/"
+          "feed": "https://www.nytimes.com/athletic/rss/nfl/lions/",
+          "palette": "lions"
         },
         {
           "label": "NBA",
           "league": "nba",
-          "feed": "https://www.nytimes.com/athletic/rss/nba/pistons/"
+          "feed": "https://www.nytimes.com/athletic/rss/nba/pistons/",
+          "palette": "pistons"
         },
         {
           "label": "NHL",
           "league": "nhl",
-          "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/"
+          "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/",
+          "palette": "redwings"
         },
         {
           "label": "EPL",
@@ -187,7 +191,8 @@
           "include": [
             "the briefing"
           ],
-          "archive": true
+          "archive": true,
+          "palette": "tottenham"
         },
         {
           "label": "EPL",
@@ -195,7 +200,8 @@
           "feed": "https://www.nytimes.com/athletic/rss/football/tottenham-hotspur/",
           "include": [
             "the briefing"
-          ]
+          ],
+          "palette": "tottenham"
         }
       ]
     }
