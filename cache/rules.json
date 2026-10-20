@@ -95,9 +95,9 @@
   "hide": [
    "fee fi foe film",
    "neck sharpies",
-   "punt-counterpunt",
-   "tailgate",
-   "this week on state street"
+   "counterpunt",
+   "state street",
+   "tailgate"
   ],
   "unless": [
    "season"
@@ -124,18 +124,28 @@
   "unless": []
  },
  {
-  "team": "Tottenham",
+  "team": "Tottenham Hotspur",
   "teaser": false,
   "hide": [
    "predictions",
-   "premier league forum",
    "q&a",
    "your questions"
   ],
   "unless": []
  },
  {
-  "team": "Tigers",
+  "team": "Tottenham Hotspur",
+  "teaser": false,
+  "hide": [
+   "premier league"
+  ],
+  "unless": [
+   "tottenham",
+   "spurs"
+  ]
+ },
+ {
+  "team": "Detroit Tigers",
   "teaser": false,
   "hide": [
    "mlb"
@@ -146,7 +156,7 @@
   ]
  },
  {
-  "team": "Lions",
+  "team": "Detroit Lions",
   "teaser": false,
   "hide": [
    "nfl"
@@ -157,7 +167,7 @@
   ]
  },
  {
-  "team": "Pistons",
+  "team": "Detroit Pistons",
   "teaser": false,
   "hide": [
    "nba"
@@ -168,7 +178,7 @@
   ]
  },
  {
-  "team": "Red Wings",
+  "team": "Detroit Red Wings",
   "teaser": false,
   "hide": [
    "nhl"
@@ -179,7 +189,7 @@
   ]
  },
  {
-  "team": "Cavaliers",
+  "team": "Cleveland Cavaliers",
   "teaser": false,
   "hide": [
    "nba"

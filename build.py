@@ -773,7 +773,7 @@ def soccer_schedule(team_id, season):
                     "comp": comp_name,
                     "home": us.get("homeAway") == "home",
                     "opp": them["team"].get("abbreviation", ""),
-                    "oppName": them["team"].get("shortDisplayName") or them["team"].get("displayName", ""),
+                    "oppName": them["team"].get("displayName") or them["team"].get("shortDisplayName", ""),
                     "oppPlace": "",
                     "ds": score(us),
                     "os": score(them),

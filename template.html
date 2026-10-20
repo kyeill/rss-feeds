@@ -103,6 +103,14 @@ h1.team span{font-family:var(--ff-ui);font-size:15px;font-weight:600;color:var(-
 .story p{font-family:var(--ff-head);font-size:14.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;max-width:62ch}
 .story.read h3{color:var(--muted);font-weight:400}
 .story.read p{opacity:.65}
+/* the X marks a story read without opening it; only unread stories have one */
+.body-col{position:relative}
+.row.unread .story h3{padding-right:34px}
+.dismiss{position:absolute;top:12px;right:-8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  appearance:none;background:none;border:0;padding:0;cursor:pointer;color:var(--muted);border-radius:50%}
+.dismiss:hover,.dismiss:focus-visible{color:var(--accent-ink);background:var(--card)}
+.dismiss svg{width:14px;height:14px}
+.row:not(.unread) .dismiss{display:none}
 
 /* game band */
 .row.game .body-col{padding-block:9px}
@@ -427,7 +435,10 @@ function render(){
       return '<div class="row'+(isRead?'':' unread')+'"><div class="when-col"><time datetime="'+esc(a.iso)+'">'+a.p.mon+' '+a.p.day+
         '</time><small>'+esc(a.p.time)+(a.src ? ' &middot; '+esc(a.src) : '')+'</small></div>'+
         '<div class="body-col"><a class="story'+(isRead?' read':'')+'" data-id="'+esc(a.id)+'" href="'+esc(a.link)+'" target="_blank" rel="noopener">'+
-        '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a></div></div>';
+        '<h3>'+esc(a.title)+'</h3>'+(a.dek ? '<p>'+esc(a.dek)+'</p>' : '')+'</a>'+
+        (isRead ? '' : '<button class="dismiss" type="button" data-id="'+esc(a.id)+'" aria-label="Mark read without opening" title="Mark read">'+
+          '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></button>')+
+        '</div></div>';
     }
     var g = b.g;
     return '<div class="row game '+(g.won?'win ':'')+(g.pre?'pre ':'')+'"><div class="when-col">'+
@@ -435,7 +446,7 @@ function render(){
       '<span class="dot"></span></div><div class="body-col"><div class="band">'+
       '<div class="gno">'+esc(g.gno)+'</div>'+
       '<div class="matchup"><div class="opp">'+side(g)+esc((g.oppPlace+' '+g.oppName).trim())+'</div>'+
-      '<div class="meta">'+(g.pre?'Preseason &middot; ':'')+(g.type === 4 ? esc(g.comp)+' &middot; ' : '')+esc(g.venue)+(g.tv ? ' &middot; '+esc(g.tv) : '')+'</div></div>'+
+      ((g.pre || g.type === 4) ? '<div class="meta">'+(g.pre ? 'Preseason' : esc(g.comp))+'</div>' : '')+'</div>'+
       '<div class="result"><span class="sc">'+g.ds+' <s>&ndash;</s> '+g.os+'</span>'+
       '<span class="pill '+g.cls+'">'+esc(g.pill)+'</span>'+
       (g.rec ? '<span class="after"><b>'+g.rec+'</b><small>record</small></span>' : '')+
@@ -449,6 +460,16 @@ function render(){
 
 // click, middle-click and the keyboard all open the link; any of them marks it read
 function opened(e){
+  var x = e.target.closest && e.target.closest('button.dismiss');
+  if(x){
+    if(e.type !== 'click' || !markRead([x.dataset.id])) return;
+    var row = x.closest('.row');
+    row.classList.remove('unread');
+    row.querySelector('a.story').classList.add('read');
+    x.remove();
+    tabs();
+    return;
+  }
   var link = e.target.closest && e.target.closest('a.story');
   if(!link || !markRead([link.dataset.id])) return;
   link.classList.add('read');
