@@ -336,7 +336,10 @@ def remembered(src, items):
 def gather(sources, league, include=()):
     """Stories from several feeds, each labelled with its source, newest kept
     from the season's start, a story in two feeds kept once (first source
-    wins). `sport` keeps only MGoBlog's basketball posts, or all but them."""
+    wins). `sport` keeps only MGoBlog's basketball posts, or all but them.
+    A source's own `include` replaces the section's -- The Briefing comes from
+    the whole-football feed, which only its matches should be taken from (and
+    archived: that feed holds about ten days)."""
     seen, articles = set(), []
     for src in sources:
         since, _ = season_for(src.get("league", league), dt.date.today())
@@ -351,12 +354,15 @@ def gather(sources, league, include=()):
                 items += read_feedly(src["feed"])
             except Exception as err:
                 print(f"  ! Feedly's copy of {src['label']} unreadable ({err})")
+        words = [w.lower() for w in src.get("include", [])] or include
+        if src.get("include"):
+            items = [a for a in items if any(w in a["title"].lower() for w in words)]
         if src.get("archive"):
             items = [a for a in remembered(src, items) if a["iso"][:10] >= since]
         for a in items:
             if a["id"] in seen:
                 continue
-            if include and not any(w in a["title"].lower() for w in include):
+            if words and not any(w in a["title"].lower() for w in words):
                 continue
             if src.get("sport") and (a.get("sport") or sport_of(a["title"], a.get("_text", ""))) != src["sport"]:
                 continue

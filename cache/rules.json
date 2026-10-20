@@ -66,10 +66,30 @@
   "team": "Michigan Football",
   "teaser": false,
   "hide": [
+   "college football"
+  ],
+  "unless": [
+   "michigan"
+  ]
+ },
+ {
+  "team": "Michigan Football",
+  "teaser": false,
+  "hide": [
    "ap top 25",
    "nfl draft"
   ],
   "unless": []
+ },
+ {
+  "team": "Michigan Basketball",
+  "teaser": false,
+  "hide": [
+   "college football"
+  ],
+  "unless": [
+   "michigan"
+  ]
  },
  {
   "team": "Michigan Basketball",
@@ -127,6 +147,7 @@
   "team": "Tottenham Hotspur",
   "teaser": false,
   "hide": [
+   "ask the ref",
    "predictions",
    "q&a",
    "your questions"
@@ -141,7 +162,8 @@
   ],
   "unless": [
    "tottenham",
-   "spurs"
+   "spurs",
+   "who won the premier"
   ]
  },
  {

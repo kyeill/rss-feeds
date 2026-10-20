@@ -179,6 +179,23 @@
           "label": "NHL",
           "league": "nhl",
           "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/"
+        },
+        {
+          "label": "EPL",
+          "league": "epl",
+          "feed": "https://www.nytimes.com/athletic/rss/football/",
+          "include": [
+            "the briefing"
+          ],
+          "archive": true
+        },
+        {
+          "label": "EPL",
+          "league": "epl",
+          "feed": "https://www.nytimes.com/athletic/rss/football/tottenham-hotspur/",
+          "include": [
+            "the briefing"
+          ]
         }
       ]
     }

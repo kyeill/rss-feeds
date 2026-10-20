@@ -222,6 +222,15 @@ mentions every team, so the team feeds carry each one for months.
 `allRules: false` exempts it from the Sheet's "All" rows, which hide power
 rankings everywhere else.
 
+It also carries the Premier League's weekly **The Briefing** (labelled EPL,
+added 2026-10-20), matched by a source-level `include` of "the briefing" --
+which leaves out the "Champions League briefing". It comes from the
+whole-football feed (`/athletic/rss/football/`; there is no Premier League
+feed), which holds only ~10 days, so its matches are archived in
+cache/archive/. The Tottenham feed is a second source for Briefings that name
+Spurs, which is how the Sept 14 and 21 editions were recovered. Briefings
+before then whose headline doesn't say "The Briefing" aren't caught.
+
 ## Leaving stories out: the rules Sheet
 
 The **RSS** tab of Kyle's Google Sheet (`rules` in `config.json`, link-viewable)
