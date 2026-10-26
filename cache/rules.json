@@ -137,6 +137,7 @@
   "team": "UMHoops",
   "teaser": false,
   "hide": [
+   "ask me anything",
    "photo gallery",
    "thread",
    "what to watch"
@@ -161,6 +162,7 @@
   "hide": [
    "ask the ref",
    "briefing",
+   "our league",
    "predictions",
    "q&a",
    "your questions"
