@@ -64,6 +64,9 @@ h1.team span{font-family:var(--ff-ui);font-size:15px;font-weight:600;color:var(-
 .team-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);
   border-left:4px solid var(--accent);border-radius:3px;padding:15px 16px}
 .team-row:hover{border-color:var(--accent)}
+/* a team with something unread is washed in its own colour */
+.team-row.fresh{background:var(--accent-wash);border-color:color-mix(in srgb, var(--accent) 40%, var(--line));border-left-color:var(--accent)}
+.team-row.fresh:hover{border-color:var(--accent)}
 .team-row .name{font-family:var(--ff-slab);font-weight:700;font-size:20px}
 .team-row .count{font-family:var(--ff-ui);font-weight:700;font-size:15px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .team-row .done{font-family:var(--ff-ui);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -321,7 +324,7 @@ function tabs(){
   if(cur < 0){
     document.getElementById('teams').innerHTML = TEAMS.map(function(t){
       var n = unreadOf(t);
-      return '<a class="team-row" data-team="'+esc(t.feed.slug)+'" href="#'+esc(t.feed.slug)+'"><span class="name">'+esc(t.feed.short)+'</span>'+
+      return '<a class="team-row'+(n ? ' fresh' : '')+'" data-team="'+esc(t.feed.slug)+'" href="#'+esc(t.feed.slug)+'"><span class="name">'+esc(t.feed.short)+'</span>'+
         (n ? '<span class="count">'+n+' unread</span>' : '<span class="done">All read</span>')+'</a>';
     }).join('');
     btn.hidden = true;
