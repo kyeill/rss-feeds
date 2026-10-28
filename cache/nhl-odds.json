@@ -1,133 +1,133 @@
 {
- "fetched": "2026-10-27T21:51:12+00:00",
+ "fetched": "2026-10-28T09:51:21+00:00",
  "teams": {
   "Anaheim Ducks": {
-   "pct": "100.0",
-   "points": 92
+   "pct": "32.1",
+   "points": 11
   },
   "Boston Bruins": {
-   "pct": "100.0",
-   "points": 100
+   "pct": "88.6",
+   "points": 19
   },
   "Buffalo Sabres": {
-   "pct": "100.0",
-   "points": 109
+   "pct": "26.3",
+   "points": 13
   },
   "Calgary Flames": {
-   "pct": null,
-   "points": 77
+   "pct": "24.8",
+   "points": 10
   },
   "Carolina Hurricanes": {
-   "pct": "100.0",
-   "points": 113
+   "pct": "88.8",
+   "points": 22
   },
   "Chicago Blackhawks": {
-   "pct": null,
-   "points": 72
+   "pct": "7.9",
+   "points": 8
   },
   "Colorado Avalanche": {
-   "pct": "100.0",
-   "points": 121
+   "pct": "64.2",
+   "points": 13
   },
   "Columbus Blue Jackets": {
-   "pct": null,
-   "points": 92
+   "pct": "28.0",
+   "points": 10
   },
   "Dallas Stars": {
-   "pct": "100.0",
-   "points": 112
+   "pct": "75.7",
+   "points": 15
   },
   "Detroit Red Wings": {
-   "pct": null,
-   "points": 92
+   "pct": "28.3",
+   "points": 13
   },
   "Edmonton Oilers": {
-   "pct": "100.0",
-   "points": 93
+   "pct": "84.8",
+   "points": 18
   },
   "Florida Panthers": {
-   "pct": null,
-   "points": 84
+   "pct": "47.9",
+   "points": 16
   },
   "Los Angeles Kings": {
-   "pct": "100.0",
-   "points": 90
+   "pct": "27.8",
+   "points": 8
   },
   "Minnesota Wild": {
-   "pct": "100.0",
-   "points": 104
+   "pct": "90.2",
+   "points": 20
   },
   "Montreal Canadiens": {
-   "pct": "100.0",
-   "points": 106
+   "pct": "53.5",
+   "points": 16
   },
   "Nashville Predators": {
-   "pct": null,
-   "points": 86
+   "pct": "49.7",
+   "points": 13
   },
   "New Jersey Devils": {
-   "pct": null,
-   "points": 87
+   "pct": "68.2",
+   "points": 16
   },
   "New York Islanders": {
-   "pct": null,
-   "points": 91
+   "pct": "51.4",
+   "points": 14
   },
   "New York Rangers": {
-   "pct": null,
-   "points": 77
+   "pct": "47.8",
+   "points": 15
   },
   "Ottawa Senators": {
-   "pct": "100.0",
-   "points": 99
+   "pct": "55.5",
+   "points": 16
   },
   "Philadelphia Flyers": {
-   "pct": "100.0",
-   "points": 98
+   "pct": "6.1",
+   "points": 10
   },
   "Pittsburgh Penguins": {
-   "pct": "100.0",
-   "points": 98
+   "pct": "33.1",
+   "points": 11
   },
   "San Jose Sharks": {
-   "pct": null,
-   "points": 86
+   "pct": "40.7",
+   "points": 13
   },
   "Seattle Kraken": {
-   "pct": null,
-   "points": 79
+   "pct": "69.3",
+   "points": 15
   },
   "St. Louis Blues": {
-   "pct": null,
-   "points": 86
+   "pct": "44.1",
+   "points": 11
   },
   "Tampa Bay Lightning": {
-   "pct": "100.0",
-   "points": 106
+   "pct": "68.1",
+   "points": 15
   },
   "Toronto Maple Leafs": {
-   "pct": null,
-   "points": 78
+   "pct": "53.6",
+   "points": 16
   },
   "Utah Mammoth": {
-   "pct": "100.0",
-   "points": 92
+   "pct": "72.3",
+   "points": 16
   },
   "Vancouver Canucks": {
-   "pct": null,
-   "points": 58
+   "pct": "4.1",
+   "points": 7
   },
   "Vegas Golden Knights": {
-   "pct": "100.0",
-   "points": 95
+   "pct": "83.4",
+   "points": 19
   },
   "Washington Capitals": {
-   "pct": null,
-   "points": 95
+   "pct": "54.8",
+   "points": 12
   },
   "Winnipeg Jets": {
-   "pct": null,
-   "points": 82
+   "pct": "28.9",
+   "points": 11
   }
  }
 }
