@@ -83,9 +83,6 @@ h1.team span,.home-title span{font-family:var(--ff-ui);font-size:15px;font-weigh
 .next h2{font-family:var(--ff-slab);font-weight:700;font-size:23px;line-height:1.15;margin:7px 0 4px}
 .next h2 i{font-family:var(--ff-ui);font-style:normal;color:var(--muted);font-weight:500;font-size:15px}
 .next .when{font-family:var(--ff-ui);font-size:13.5px;color:var(--muted)}
-.next .tv{margin-top:9px;display:flex}
-.tv b{font-family:var(--ff-ui);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);
-  border-radius:2px;padding:2px 6px;color:var(--muted)}
 
 /* the spine */
 .feed{position:relative;margin-top:8px}
@@ -411,8 +408,8 @@ function render(){
   document.getElementById('next').innerHTML = !g0 ? '' :
     '<div class="lbl">Up next</div>'+
     '<h2>'+side(g0)+esc((g0.oppPlace+' '+g0.oppName).trim())+'</h2>'+
-    '<div class="when num">'+g0.p.wd+', '+g0.p.mon+' '+g0.p.day+' &middot; '+(g0.tbd ? 'Time TBD' : g0.p.time+' ET')+' &middot; '+esc(g0.venue)+'</div>'+
-    (g0.tv ? '<div class="tv"><b>'+esc(g0.tv)+'</b></div>' : '');
+    '<div class="when num">'+g0.p.wd+', '+g0.p.mon+' '+g0.p.day+' &middot; '+(g0.tbd ? 'Time TBD' : g0.p.time+' ET')+
+    (g0.tv ? ' &middot; '+esc(g0.tv) : '')+(g0.venue ? ' &middot; '+esc(g0.venue) : '')+'</div>';
 
   // each game, then the stories filed before the next one shown. A story sits under the
   // last finished game before it: the one it follows may still be being played.
