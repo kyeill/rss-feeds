@@ -295,6 +295,24 @@ It is a separate project from the read list on purpose: that one's Script
 Properties hold one entry per story read, and the token is easier to find,
 and to keep away from the public web app, on its own.
 
+### When a feed is down
+
+On 2026-10-28 The Athletic's feeds answered 504 (Gateway Timeout) for four
+hours, and every build failed (an email to Kyle each hour). Now:
+
+- A server error (5xx) is retried once after 5 seconds, like a timeout.
+- A feed that still doesn't answer is replaced by **the stories the last
+  published page had** for that tab (and that source, on a tab with several),
+  so nothing drops off the page and the build still succeeds. An archived
+  source (MGoBlog, The Briefing) already keeps its own copy.
+- Each address is asked once per build, a failure included, so a dead feed
+  isn't waited on again by the names step, Power Rankings, etc.
+- The tab's footer then says which feed "didn't load at the last update".
+  If that note stays for days, the feed's address has probably changed.
+
+Tested by a build with every Athletic address forced to 504: all eleven tabs
+kept every story.
+
 ## Icon and install
 
 The mark is the page itself: a spine with one dot per team, in tab order and

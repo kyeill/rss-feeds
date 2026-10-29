@@ -25,6 +25,7 @@ import hashlib
 import re
 import pathlib
 import datetime as dt
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -38,14 +39,19 @@ FETCHED = {}
 
 
 def fetch(url):
-    """One retry after a timeout or dropped connection: the build makes ~40
-    requests an hour, and one slow answer shouldn't fail it (and email Kyle).
-    An HTTP error (403, 404, 500) is an answer, not a hiccup, and isn't retried.
-    Each address is downloaded once per build: the names step reads the
-    basketball feeds before their section does."""
-    if url in FETCHED:
-        return FETCHED[url]
-    FETCHED[url] = _download(url)
+    """One retry after a timeout, a dropped connection or a server error (5xx):
+    the build makes ~40 requests an hour, and one slow answer shouldn't fail it
+    (and email Kyle). A 403 or 404 is an answer, not a hiccup, and isn't
+    retried. Each address is asked once per build, a failure included: the
+    names step reads the Michigan feeds before their sections do, and a feed
+    that is down shouldn't be waited on twice."""
+    if url not in FETCHED:
+        try:
+            FETCHED[url] = _download(url)
+        except Exception as err:
+            FETCHED[url] = err
+    if isinstance(FETCHED[url], Exception):
+        raise FETCHED[url]
     return FETCHED[url]
 
 
@@ -55,8 +61,10 @@ def _download(url):
         try:
             with urllib.request.urlopen(req, timeout=45) as r:
                 return r.read().decode("utf-8", "replace")
-        except urllib.error.HTTPError:
-            raise
+        except urllib.error.HTTPError as err:
+            if err.code < 500 or attempt == 2:
+                raise
+            time.sleep(5)
         except (TimeoutError, urllib.error.URLError, ConnectionError):
             if attempt == 2:
                 raise
@@ -333,7 +341,31 @@ def remembered(src, items):
     return out
 
 
-def gather(sources, league, include=()):
+PREVIOUS = {}
+STALE = {}      # slug -> labels of feeds that didn't load this run
+
+
+def previous(slug, label=None):
+    """The stories the last published page had for this tab (from one source,
+    if a label is given): what a feed that is down this hour is replaced with.
+    The Athletic's feeds answered 504 for four hours on 2026-10-28, which
+    stopped every build -- and a section with several sources would otherwise
+    have gone out missing that source's stories. They were already through
+    the Sheet's rules, which run over them again anyway."""
+    if not PREVIOUS:
+        PREVIOUS[None] = {}
+        try:
+            page = (HERE / "docs" / "index.html").read_text(encoding="utf-8")
+            raw = re.search(r'<script type="application/json" id="data">(.*?)</script>', page, re.S).group(1)
+            data = json.loads(raw)          # the page escapes </ as <\/, which JSON reads as </
+            PREVIOUS[None] = {f["slug"]: f.get("articles", []) for f in data["feeds"]}
+        except Exception as err:
+            print(f"  ! last page unreadable ({err}); nothing to fall back on")
+    arts = PREVIOUS[None].get(slug, [])
+    return [dict(a) for a in arts if label is None or a.get("src") == label]
+
+
+def gather(sources, league, include=(), slug=None):
     """Stories from several feeds, each labelled with its source, newest kept
     from the season's start, a story in two feeds kept once (first source
     wins). `sport` keeps only MGoBlog's basketball posts, or all but them.
@@ -347,9 +379,11 @@ def gather(sources, league, include=()):
         try:
             items = read_wordpress(src["feed"], since) if src.get("type") == "wordpress" else read_feed(src["feed"], since)
         except Exception as err:
-            # one source down shouldn't blank a section; an archived one keeps what it had
-            print(f"  ! {src['label']} unreadable ({err}); skipped this run")
-            items = []
+            # one source down shouldn't blank a section: the last page's copy stands in
+            # (an archived source already has its own copy)
+            items = [] if src.get("archive") else [a for a in previous(slug, src["label"]) if a["iso"][:10] >= since]
+            print(f"  ! {src['label']} unreadable ({err}); {len(items)} stories kept from the last page")
+            STALE.setdefault(slug, set()).add(src["label"])
         if src.get("feedly"):
             try:
                 items += read_feedly(src["feed"])
@@ -1006,7 +1040,7 @@ def story_tab(feed, rules):
     has one of its phrases (the Power Rankings tab reads the four team feeds
     for "power rankings"). `allRules: false` exempts a tab from the "All"
     rows of the Sheet, which would otherwise hide exactly what it collects."""
-    articles = gather(feed["sources"], "soccer", [w.lower() for w in feed.get("include", [])])
+    articles = gather(feed["sources"], "soccer", [w.lower() for w in feed.get("include", [])], feed["slug"])
     kept = [a for a in articles if not hidden(a, feed, rules, feed.get("allRules", True))]
     kept.sort(key=lambda a: a["iso"])
     return kept, len(articles) - len(kept)
@@ -1032,7 +1066,8 @@ def main():
                 got = read_wordpress(src["feed"], since) if src.get("type") == "wordpress" else read_feed(src["feed"], since)
                 titles += [a["title"] for a in got]
             except Exception as err:
-                print(f"  ! names: {src['label']} unreadable ({err})")
+                titles += [a["title"] for a in previous(bb_feed["slug"], src["label"])]
+                print(f"  ! names: {src['label']} unreadable ({err}); using the last page's headlines")
     fb_feed = next((f for f in CONFIG["feeds"] if f.get("league") == "cfb"), None)
     fb_titles = []
     for src in (fb_feed or {}).get("sources", []):
@@ -1041,21 +1076,28 @@ def main():
         try:
             fb_titles += [a["title"] for a in read_feed(src["feed"], season_for("cfb", dt.date.today())[0])]
         except Exception as err:
-            print(f"  ! names: {src['label']} unreadable ({err})")
+            fb_titles += [a["title"] for a in previous(fb_feed["slug"], src["label"])]
+            print(f"  ! names: {src['label']} unreadable ({err}); using the last page's headlines")
     load_names(titles, fb_titles)
     for feed in CONFIG["feeds"]:
         if feed.get("kind") == "stories":
             articles, dropped = story_tab(feed, rules)
             feeds.append({k: feed[k] for k in ("slug", "short")}
-                         | {"league": "stories", "articles": articles, "games": [], "standing": None})
+                         | {"league": "stories", "articles": articles, "games": [], "standing": None,
+                            "stale": sorted(STALE.get(feed["slug"], []))})
             print(f"{feed['short']}: {len(articles)} stories ({dropped} hidden by rules)")
             continue
         league, team, local_tv = feed["league"], feed["team"], feed.get("localTv", "")
         since, season = season_for(league, dt.date.today())
         if "sources" in feed:
-            articles = gather(feed["sources"], league)
+            articles = gather(feed["sources"], league, slug=feed["slug"])
         else:
-            articles = [{k: v for k, v in a.items() if k != "_text"} for a in read_feed(feed["feed"], since)]
+            try:
+                articles = [{k: v for k, v in a.items() if k != "_text"} for a in read_feed(feed["feed"], since)]
+            except Exception as err:
+                articles = [a for a in previous(feed["slug"]) if a["iso"][:10] >= since]
+                print(f"  ! {feed['short']} feed unreadable ({err}); {len(articles)} stories kept from the last page")
+                STALE.setdefault(feed["slug"], set()).add(feed.get("source", "The Athletic"))
         kept = [a for a in articles if not hidden(a, feed, rules)]
         kept.sort(key=lambda a: a["iso"])
         dropped, articles = len(articles) - len(kept), kept
@@ -1079,7 +1121,8 @@ def main():
         else:
             standing = espn_standing(league, team, season, played)
         feeds.append({k: feed[k] for k in ("slug", "short", "league")}
-                     | {"articles": articles, "games": games, "standing": standing})
+                     | {"articles": articles, "games": games, "standing": standing,
+                        "stale": sorted(STALE.get(feed["slug"], []))})
         print(
             f"{feed['short']}: {len(articles)} stories since {since} ({dropped} hidden by rules), "
             f"{played} of {len([g for g in games if g['type'] == 2])} games played\n  {standing}"

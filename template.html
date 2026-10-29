@@ -462,8 +462,10 @@ function render(){
   }).join('') || '<div class="row"><p class="empty">Nothing filed yet.</p></div>';
 
   var newest = arts[arts.length-1];
-  document.getElementById('stamp').textContent = newest ?
-    'Newest story '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET' : 'No stories yet this season';
+  var stale = T.feed.stale || [];
+  document.getElementById('stamp').textContent = (newest ?
+    'Newest story '+newest.p.mon+' '+newest.p.day+', '+newest.p.time+' ET' : 'No stories yet this season')+
+    (stale.length ? ' · '+stale.join(', ')+' didn’t load at the last update; showing earlier stories' : '');
 }
 
 // click, middle-click and the keyboard all open the link; any of them marks it read
