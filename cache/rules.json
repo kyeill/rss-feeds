@@ -139,6 +139,7 @@
   "teaser": false,
   "hide": [
    "ask me anything",
+   "film room",
    "photo gallery",
    "thread",
    "what to watch"
@@ -180,6 +181,14 @@
    "detroit",
    "tigers"
   ]
+ },
+ {
+  "team": "Detroit Lions",
+  "teaser": false,
+  "hide": [
+   "staff picks"
+  ],
+  "unless": []
  },
  {
   "team": "Detroit Lions",
