@@ -1110,7 +1110,11 @@ def main():
         else:
             games = espn_schedule(league, team, season, local_tv)
         played = len([g for g in games if g["ds"] is not None and g["type"] == 2])
-        if league == "nhl":
+        # the place / games-back / odds header; off since 2026-10-29 (Kyle: "maybe
+        # will add back something later") -- "standings": true in config.json restores it
+        if not CONFIG.get("standings", True):
+            standing = None
+        elif league == "nhl":
             standing = nhl_standing(team, played)
         elif league == "epl":
             standing = soccer_standing(team, played)

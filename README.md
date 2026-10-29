@@ -60,6 +60,12 @@ tagline, no trip or "then" commentary on Up next, game numbers in brackets (`[8]
 per game. The Athletic's own teaser stays as the summary (he chose that over
 generated summaries, which would need the paywalled article text).
 
+**Header figures are off (2026-10-29).** Kyle took the place / games-back /
+playoff-odds line off the team tabs "for now -- maybe will add back something
+later". `"standings": false` in config.json skips those lookups entirely
+(fewer requests, fewer ways to fail); setting it to `true` brings the header
+back exactly as it was, all the standings code is still here.
+
 ## How a story finds its place
 
 Every story sits under the last finished game before it was filed (a line
