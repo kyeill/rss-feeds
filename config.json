@@ -1,14 +1,12 @@
 {
   "sync": "https://script.google.com/macros/s/AKfycbw8vFkELzj4_cTKh7vrQ55az3JtItkFBx_6PoCL20EJ5HnHCfomt4u75FrOKVrSgxh_2g/exec",
   "rules": "https://docs.google.com/spreadsheets/d/1v9ErfF8bZ-jpboTz6cHth1sZf8VlCQa2DOufH74OJmk/edit?gid=1881768788",
-  "standings": false,
   "feeds": [
     {
       "slug": "mfootball",
       "short": "Michigan Football",
       "league": "cfb",
       "team": "130",
-      "localTv": "",
       "sources": [
         {
           "label": "The Athletic",
@@ -28,7 +26,6 @@
       "short": "Michigan Basketball",
       "league": "cbb",
       "team": "130",
-      "localTv": "",
       "sources": [
         {
           "label": "The Athletic",
@@ -53,7 +50,6 @@
       "short": "Michigan Hockey",
       "league": "chky",
       "team": "130",
-      "localTv": "",
       "sources": [
         {
           "label": "MGoBlog",
@@ -72,7 +68,6 @@
       ],
       "league": "epl",
       "team": "367",
-      "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/football/tottenham-hotspur/"
     },
     {
@@ -84,7 +79,6 @@
       "league": "mlb",
       "team": "DET",
       "localTv": "Tigers.TV",
-      "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/mlb/tigers/"
     },
     {
@@ -95,8 +89,6 @@
       ],
       "league": "nfl",
       "team": "DET",
-      "localTv": "",
-      "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/nfl/lions/"
     },
     {
@@ -108,7 +100,6 @@
       "league": "nba",
       "team": "DET",
       "localTv": "TV20 Detroit",
-      "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/nba/pistons/"
     },
     {
@@ -120,7 +111,6 @@
       "league": "nhl",
       "team": "DET",
       "localTv": "Detroit SportsNet",
-      "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/"
     },
     {
@@ -132,7 +122,6 @@
       "league": "nba",
       "team": "CLE",
       "localTv": "DAZN",
-      "source": "The Athletic",
       "feed": "https://www.nytimes.com/athletic/rss/nba/cavaliers/"
     },
     {
@@ -142,12 +131,12 @@
       "sources": [
         {
           "label": "USMNT",
-          "league": "soccer",
+          "league": "epl",
           "feed": "https://www.nytimes.com/athletic/rss/football/usmnt/"
         },
         {
           "label": "Atlanta",
-          "league": "soccer",
+          "league": "epl",
           "feed": "https://www.nytimes.com/athletic/rss/football/atlunited/"
         }
       ]

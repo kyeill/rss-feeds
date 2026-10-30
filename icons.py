@@ -4,9 +4,9 @@ There is no image library on this machine (the same constraint games-history's
 icons.py works under), so every shape is a rectangle, disc or capsule resolved
 per pixel with 4x4 supersampling for smooth edges, then deflated by hand.
 
-The mark is the page itself: a spine with a dot per team, in tab order and
-team colour (Tigers orange, Lions blue, Pistons teal, Red Wings red, Cavaliers
-gold), each with a headline bar beside it. Everything sits inside the
+The mark is the page itself: a spine with five coloured dots (Tigers orange,
+Lions blue, Pistons teal, Red Wings red, Cavaliers gold), each with a headline
+bar beside it. Everything sits inside the
 maskable safe circle (radius 0.4 about the centre), so Android can cut the
 icon to any shape -- that is what makes it an adaptive icon.
 
@@ -15,7 +15,7 @@ icon to any shape -- that is what makes it an adaptive icon.
 writes docs/icon-192.png, icon-512.png (full-bleed, "any maskable"),
 icon-180.png (iPhone home screen) and icon-mono-512.png (Android 13+ themed
 icons: white on transparent, recoloured by the launcher). The browser-tab
-favicon is an SVG drawn by the page itself, in the open tab's colour.
+favicon is an SVG drawn by the page itself, in the open section's colour.
 """
 
 import os

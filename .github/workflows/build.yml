@@ -1,16 +1,8 @@
 name: Build
 
-# EVERY THREE HOURS, AND EVERY RUN REBUILDS.
-#
-# soccer-history and games-history guard their cron so the site is built once
-# a day: their sources are thirteen years of finished games, and a second
-# build would only burn a runner. This one is the opposite. It is a news feed
-# -- the recap of a 7pm game lands near midnight, the morning column lands at
-# 6am -- so a page built once a day is stale most of the day, and there is no
-# guard here on purpose.
-#
-# Both sources are small (one RSS document, one schedule endpoint), so a run
-# costs a few seconds and there is nothing to cache between runs.
+# A news feed, so every run rebuilds -- there is no once-a-day guard here.
+# "RSS Feeds Refresh" (refresh-script/) starts this hourly through the API,
+# because GitHub runs this account's cron hours late; the cron is the backup.
 on:
   schedule:
     - cron: "0 */3 * * *"
@@ -27,9 +19,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 

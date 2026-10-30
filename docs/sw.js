@@ -1,5 +1,5 @@
 // Just enough service worker to make the page installable and open offline.
-// The page itself is always fetched fresh (it is rebuilt every three hours and
+// The page itself is always fetched fresh (it is rebuilt every hour and
 // carries the stories in it); the cached copy is only the fallback when there
 // is no connection. The read list and fonts are other hosts and pass straight
 // through.

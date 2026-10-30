@@ -12,12 +12,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d1013">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Roboto+Slab:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Roboto+Slab:wght@700&display=swap">
 <style>
-/* Layout: a tab per team; under it one dated spine down the page, games as weighted bands on it, and the beat writing in the gaps between them.
-   Type follows The Athletic's three voices with free stand-ins for its licensed fonts: Libre Franklin for
-   nyt-franklin (labels, dates, scores), Source Serif 4 for nyt-cheltenham (headlines, teasers), Roboto Slab
-   for its RegularSlab (team tabs, section heads). Dark only, by Kyle's choice. */
+/* Layout: a home page of sections; each section is one dated spine, games as weighted bands on it,
+   the beat writing in the gaps between them. Type follows The Athletic's three voices with free stand-ins:
+   Libre Franklin for nyt-franklin (labels, dates, scores), Source Serif 4 for nyt-cheltenham (headlines,
+   teasers), Roboto Slab for its RegularSlab (section names). Dark only, by Kyle's choice. */
 :root{
   --ice:#0d1013; --card:#15191e; --band:#171c22;
   --ink:#eceff3; --muted:#8e99a6; --line:#262d35; --line-soft:#1e242b;
@@ -28,9 +28,9 @@
   --ff-slab:"Roboto Slab",Rockwell,Georgia,serif;
   color-scheme:dark;
 }
-/* each tab wears its team's colour; the Red Wings' red is the default above.
-   --accent fills, --accent-text is the same hue light enough to read as text,
-   --on-accent is the text on a filled pill. */
+/* each section wears its team's colour. --accent fills, --accent-text is the same hue light enough
+   to read as text, --accent-ink a lighter step for counts and hovers, --accent-wash a dark tint for
+   backgrounds, --on-accent the text on a filled pill. A new section needs its own line. */
 [data-team="mfootball"],[data-team="mbasketball"],[data-team="mhockey"]{--accent:#ffcb05; --accent-text:#ffd437; --accent-ink:#ffe073; --accent-wash:#221d06; --on-accent:#00274c;}
 [data-team="redwings"]{--accent:#ff3047; --accent-text:#ff3047; --accent-ink:#ff5d6e; --accent-wash:#221316; --on-accent:#fff;}
 [data-team="tigers"]{--accent:#ff6a2b; --accent-text:#ff7f45; --accent-ink:#ff9a66; --accent-wash:#26170f; --on-accent:#15181d;}
@@ -59,7 +59,6 @@ h1.team{font-family:var(--ff-slab);font-weight:700;font-size:22px;line-height:1.
 h1.team span,.home-title span{font-family:var(--ff-ui);font-size:15px;font-weight:600;color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .home-title span{font-size:19px}
 
-#home[hidden],#body[hidden]{display:none}
 .home-title{font-family:var(--ff-slab);font-weight:700;font-size:28px;margin:0;padding:max(22px, env(safe-area-inset-top)) 0 14px;border-bottom:2px solid var(--ink)}
 .teams{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .team-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);
@@ -71,11 +70,6 @@ h1.team span,.home-title span{font-family:var(--ff-ui);font-size:15px;font-weigh
 .team-row .name{font-family:var(--ff-slab);font-weight:700;font-size:20px}
 .team-row .count{font-family:var(--ff-ui);font-weight:700;font-size:15px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .team-row .done{font-family:var(--ff-ui);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-
-.standing[hidden]{display:none}
-.standing{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:18px}
-.rec{display:flex;align-items:baseline;gap:8px}
-.rec b{font-family:var(--ff-slab);font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
 
 /* up next */
 .next{margin-top:22px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:3px;background:var(--card);padding:16px 18px}
@@ -95,7 +89,7 @@ h1.team span,.home-title span{font-family:var(--ff-ui);font-size:15px;font-weigh
 /* only games sit on the spine; stories hang off it, indented clear of it */
 .dot{position:absolute;right:-7px;top:18px;width:13px;height:13px;border-radius:50%;background:var(--accent);border:1.5px solid var(--accent)}
 .row.game.pre .dot{background:var(--ice);border-color:var(--muted)}
-.body-col{padding:12px 0 12px 26px;min-width:0}
+.body-col{position:relative;padding:12px 0 12px 26px;min-width:0}
 
 /* story: unread shows in its date; a read headline steps back */
 .story{display:block;padding:5px 0 13px;border-bottom:1px solid var(--line-soft)}
@@ -105,7 +99,6 @@ h1.team span,.home-title span{font-family:var(--ff-ui);font-size:15px;font-weigh
 .story.read h3{color:var(--muted);font-weight:400}
 .story.read p{opacity:.65}
 /* the X marks a story read without opening it; only unread stories have one */
-.body-col{position:relative}
 .row.unread .story h3{padding-right:34px}
 .dismiss{position:absolute;top:12px;right:-8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
   appearance:none;background:none;border:0;padding:0;cursor:pointer;color:var(--muted);border-radius:50%}
@@ -138,7 +131,6 @@ h1.team span,.home-title span{font-family:var(--ff-ui);font-size:15px;font-weigh
 footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:6px 16px;flex-wrap:wrap}
 .linkbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;font:inherit;color:var(--accent-ink);
   text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
-.linkbtn[hidden]{display:none}
 
 @media (max-width:620px){
   .feed::before{display:none}
@@ -170,14 +162,8 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
   </section>
 
   <div id="body" hidden>
-  <div class="standing">
-    <div class="rec"><b id="placeNum">&mdash;</b><span class="lbl" id="placeNote">division</span></div>
-    <div class="rec"><b id="gapNum">&mdash;</b><span class="lbl" id="gapNote">playoff spot</span></div>
-    <div class="rec"><b id="oddsNum">&mdash;</b><span class="lbl" id="oddsNote">playoff odds</span></div>
-  </div>
-
   <section class="next" id="next"></section>
-  <div class="feed" id="feed" role="tabpanel"></div>
+  <div class="feed" id="feed"></div>
   </div>
 
   <footer>
@@ -192,33 +178,28 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:v
 (function(){
 "use strict";
 var D = JSON.parse(document.getElementById('data').textContent);
-var TZ = 'America/Detroit';
 var MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+var CLOCK = new Intl.DateTimeFormat('en-US',{timeZone:'America/Detroit',month:'numeric',day:'numeric',
+  hour:'numeric',minute:'2-digit',weekday:'short',hour12:true});
+
 function parts(iso){
-  var d = new Date(iso);
-  var f = new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric',month:'numeric',day:'numeric',
-    hour:'numeric',minute:'2-digit',weekday:'short',hour12:true});
-  var o = {};
-  f.formatToParts(d).forEach(function(p){ o[p.type] = p.value; });
+  var d = new Date(iso), o = {};
+  CLOCK.formatToParts(d).forEach(function(p){ o[p.type] = p.value; });
   return {t:d.getTime(), wd:o.weekday, mon:MONTH[+o.month-1], day:+o.day,
-          time:o.hour+':'+o.minute+' '+String(o.dayPeriod||'').toLowerCase(),
-          key:o.year+'-'+String(o.month).padStart(2,'0')+'-'+String(o.day).padStart(2,'0')};
+          time:o.hour+':'+o.minute+' '+String(o.dayPeriod||'').toLowerCase()};
 }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function side(g){ return '<i>'+(g.home ? 'vs' : 'at')+'</i> '; }
-function ordinal(n){ var s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); }
 
 /* one team: games in order with the running record. Hockey records W-L-OT (an
    overtime or shootout loss is its own column); football adds ties only once
    there is one; baseball and basketball are W-L. */
 function prep(feed){
   var hockey = feed.league === 'nhl', soccer = feed.league === 'epl';
-  var games = feed.games.slice().sort(function(a,b){
-    return (a.startUTC||a.date) < (b.startUTC||b.date) ? -1 : 1; });
   var w=0,l=0,o=0,t=0,n=0;
-  games.forEach(function(g){
+  feed.games.forEach(function(g){
     g.p = parts(g.startUTC || g.date+'T23:00:00Z');
     g.pre = g.type === 1;
     g.done = g.ds !== null && g.ds !== undefined;
@@ -240,9 +221,8 @@ function prep(feed){
     g.rec = hockey ? w+'-'+l+'-'+o : soccer ? w+'-'+t+'-'+l : w+'-'+l+(t ? '-'+t : '');
   });
 
-  var arts = feed.articles.slice().sort(function(a,b){ return a.iso < b.iso ? -1 : 1; });
-  arts.forEach(function(a){ a.p = parts(a.iso); });
-  return {feed:feed, games:games, arts:arts};
+  feed.articles.forEach(function(a){ a.p = parts(a.iso); });
+  return {feed:feed, games:feed.games, arts:feed.articles};
 }
 var TEAMS = D.feeds.map(prep);
 
@@ -315,31 +295,28 @@ function pick(){
   cur = -1;
   TEAMS.forEach(function(t, i){ if(t.feed.slug === slug) cur = i; });
 }
-function unreadOf(t){ return t.arts.filter(function(a){ return !read.has(a.id); }).length; }
+function unread(t){ return t.arts.map(function(a){ return a.id; }).filter(function(id){ return !read.has(id); }); }
 // the counts: on the home page's list, or in the team page's header and footer link
 function tabs(){
   var btn = document.getElementById('allRead');
   if(cur < 0){
     document.getElementById('teams').innerHTML = TEAMS.map(function(t){
-      var n = unreadOf(t);
+      var n = unread(t).length;
       return '<a class="team-row'+(n ? ' fresh' : '')+'" data-team="'+esc(t.feed.slug)+'" href="#'+esc(t.feed.slug)+'"><span class="name">'+esc(t.feed.short)+'</span>'+
         (n ? '<span class="count">'+n+' unread</span>' : '<span class="done">All read</span>')+'</a>';
     }).join('');
     // a story in two tabs (a Briefing that names Spurs) counts once
     var all = new Set();
-    TEAMS.forEach(function(t){ t.arts.forEach(function(a){ if(!read.has(a.id)) all.add(a.id); }); });
+    TEAMS.forEach(function(t){ unread(t).forEach(function(id){ all.add(id); }); });
     document.querySelector('.home-title').innerHTML = 'RSS Feeds'+(all.size ? ' <span>('+all.size+')</span>' : '');
     btn.hidden = true;
     return;
   }
-  var n = unreadOf(TEAMS[cur]);
+  var n = unread(TEAMS[cur]).length;
   document.getElementById('top').innerHTML = '<button type="button" class="home-btn" id="homeBtn">&lsaquo; Home</button>'+
     '<h1 class="team">'+esc(TEAMS[cur].feed.short)+(n ? ' <span>('+n+')</span>' : '')+'</h1>';
   btn.textContent = 'Mark all '+n+' '+TEAMS[cur].feed.short+' stories read';
   btn.hidden = !n;
-}
-function unreadIds(){
-  return TEAMS[cur].arts.filter(function(a){ return !read.has(a.id); }).map(function(a){ return a.id; });
 }
 
 /* the browser-tab icon: the app's mark cut down to what reads at 16px -- one dot
@@ -376,33 +353,6 @@ function render(){
   document.title = T.feed.short+' · RSS Feeds';
   favicon();
   tabs();
-
-  // where the team stands: big text, then what it's measured against
-  // story-only tabs (Soccer, Power Rankings) have no table and no schedule
-  var S = T.feed.standing, $ = function(id){ return document.getElementById(id); };
-  document.querySelector('.standing').hidden = !S;
-  if(S){
-    $('placeNum').textContent = S.place ? ordinal(S.place)+' Place' : '—';
-    $('placeNote').textContent = S.division;
-    if(S.second){                            // a figure the build chose (college hockey's Big Ten record)
-      $('gapNum').textContent = S.second.big; $('gapNote').textContent = S.second.note;
-    }
-    else if(S.gap === null){ $('gapNum').textContent = '—'; $('gapNote').textContent = 'playoff spot'; }
-    else {
-      $('gapNum').textContent = (S.gap % 1 ? S.gap.toFixed(1) : S.gap)+' '+S.unit+(S.gap === 1 ? '' : 's')+(S.inside ? ' Clear' : ' Back');
-      $('gapNote').textContent = S.gapNote || (S.inside ? 'of first team out' : 'of playoff spot');
-    }
-    var o = S.odds;
-    if(S.third){                             // a figure the build chose (college basketball's record)
-      $('oddsNum').textContent = S.third.big; $('oddsNote').textContent = S.third.note;
-    } else if(o === null && S.record){              // a league table has no odds; its record stands in
-      $('oddsNum').textContent = S.record; $('oddsNote').textContent = 'W-D-L';
-    } else {
-      $('oddsNum').textContent = o === null ? '—' : o > 0 && o < 1 ? '<1%' : o > 99 && o < 100 ? '>99%' : Math.round(o)+'%';
-      // Hockey-Reference starts a season's odds once every team has played 10 games
-      $('oddsNote').textContent = o === null && T.feed.league === 'nhl' ? 'playoff odds · after 10 games' : 'playoff odds';
-    }
-  }
 
   var g0 = games.filter(function(g){ return !g.done; })[0];
   document.getElementById('next').innerHTML = !g0 ? '' :
@@ -465,28 +415,19 @@ function render(){
     (stale.length ? ' · '+stale.join(', ')+' didn’t load at the last update; showing earlier stories' : '');
 }
 
-// click, middle-click and the keyboard all open the link; any of them marks it read
+// click, middle-click and the keyboard all open the link; any of them marks it read, and so does the X
 function opened(e){
-  var x = e.target.closest && e.target.closest('button.dismiss');
-  if(x){
-    if(e.type !== 'click' || !markRead([x.dataset.id])) return;
-    var row = x.closest('.row');
-    row.classList.remove('unread');
-    row.querySelector('a.story').classList.add('read');
-    x.remove();
-    tabs();
-    return;
-  }
-  var link = e.target.closest && e.target.closest('a.story');
-  if(!link || !markRead([link.dataset.id])) return;
-  link.classList.add('read');
-  link.closest('.row').classList.remove('unread');
+  var el = e.target.closest('a.story, button.dismiss');
+  if(!el || (e.type === 'auxclick' && el.tagName === 'BUTTON') || !markRead([el.dataset.id])) return;
+  var row = el.closest('.row');
+  row.classList.remove('unread');
+  row.querySelector('a.story').classList.add('read');
   tabs();
 }
 document.getElementById('feed').addEventListener('click', opened);
 document.getElementById('feed').addEventListener('auxclick', opened);
 document.getElementById('allRead').addEventListener('click', function(){
-  var ids = unreadIds();
+  var ids = unread(TEAMS[cur]);
   if(ids.length && confirm('Mark all '+ids.length+' '+TEAMS[cur].feed.short+' stories as read?')){ markRead(ids); render(); }
 });
 function go(i, from){

@@ -1,419 +1,232 @@
 # RSS Feeds
 
-A beat writer's feed, read against the schedule. Stories are not a flat list:
-each one sits in the gap between the two games it was filed between, so the
-rhythm of the coverage shows — the recap that lands the same night, the column
-the next morning, the contract news that breaks on an off day.
+Beat writers' stories read against the schedule: each story sits under the last
+game finished before it was filed, so the rhythm of the coverage shows.
 
 Live: https://kyeill.github.io/rss-feeds/ · repo: kyeill/rss-feeds
 
-A **home page** lists every section with its unread count; tapping one opens
-it, and each section page has a **‹ Home** button in place of the old tab row
-(Kyle, 2026-10-19). Order: (Michigan, to come) **Tottenham, Tigers, Lions,
-Pistons, Red Wings, Cavaliers, Soccer, Power Rankings**. The address is the
-route: no `#` is home, `#slug` a section, so the phone's Back button returns
-home and a section can be bookmarked; the Home button goes Back when the page
-came from home, and otherwise replaces the address. Swiping still moves
-between sections on a section page (not on home). The first five —
-each The Athletic's own team feed (`nytimes.com/athletic/rss/<league>/<team>/`,
-URLs in `config.json`), filtered by the rules in Kyle's Sheet (below). Until
-2026-10-19 the feeds came through siftrss, which did the filtering. The Red
-Wings came first (2026-10-18); the other four were added the same night under
-the same rules. Hockey uses the NHL's own API; baseball, football and
-basketball use ESPN's.
-
-## The pieces
+## Files
 
 | file | what it does |
 | --- | --- |
-| `config.json` | the read-list address, the rules Sheet, and the feeds: tab name, league (`nhl` `mlb` `nfl` `nba`), team abbreviation, local TV channel, feed URL |
-| `build.py` | reads each feed and that club's season, writes one page with a tab per feed |
-| `template.html` | the whole page — CSS and the script that lays out the timeline |
-| `docs/index.html` | the built page, committed, served by Pages from `main` |
-| `apps-script/` | the read-list web app the page syncs with (see below) |
-| `refresh-script/` | a second Apps Script project, "RSS Feeds Refresh", that starts the build every hour (see below) |
-| `icons.py` | draws the app icons into `docs/` (run by hand when the mark changes) |
-| `docs/manifest.webmanifest`, `docs/sw.js` | make it installable on a phone; hand-written, not built |
+| `config.json` | read-list address, rules Sheet, and every section and its feeds |
+| `build.py` | reads the feeds, the rules and the schedules; writes the page. Standard library only |
+| `template.html` | the whole page: CSS, and the script that lays out the timeline |
+| `docs/` | what Pages serves from `main`: the built `index.html`, plus the hand-written `sw.js` and manifest, and the icons |
+| `cache/` | committed by the build: `rules.json` (last good rules), `archive/` (posts feeds no longer hold) |
+| `apps-script/` | "RSS Feeds Read Sync", the web app holding the read list |
+| `refresh-script/` | "RSS Feeds Refresh", which starts the build hourly |
+| `icons.py` | draws the icons into `docs/`; run by hand when the mark changes |
 
 ```bash
 python build.py
 ```
 
-No dependencies; standard library only. GitHub Actions runs the same command
-every three hours and commits `docs/` when the feed has moved.
+## How it runs
+
+**Hourly.** GitHub runs this account's scheduled builds hours late, so "RSS Feeds
+Refresh" (a time-driven Apps Script trigger) starts `build.yml` through GitHub's
+API every hour. The workflow's three-hourly cron is the backup. Each run commits
+`docs` and `cache` if anything moved.
+
+The refresh script needs a Script Property `GITHUB_TOKEN`: a fine-grained token
+for `kyeill/rss-feeds` only, Actions read and write. Kyle pastes it himself; it
+is never in the repo. A failed run throws and Apps Script emails him, which is
+how an expired token shows up: make a new one and paste it over the old value.
+`setup()`, run once from the editor, installs the trigger.
+
+**When something fails:**
+
+| what | what happens |
+| --- | --- |
+| timeout, dropped connection, 5xx | retried once |
+| a feed still down | the last published page's stories stand in, and the section's footer says "didn't load at the last update". If that lasts for days, the feed's address has probably changed |
+| an archived source down | its archive stands in |
+| the rules Sheet unreadable | `cache/rules.json` is used; with no copy the build stops rather than publish unfiltered |
+| a schedule unreadable | the build fails, and the live page stays as it was |
+
+Each address is asked once per build, a failure included. The outage handling
+was tested with every Athletic address forced to 504: all sections kept every
+story.
 
 ## The page
 
-A tab per team across the top — **Red Wings (52)**, the number being unread
-stories; the count disappears at zero. Kyle plans a couple more teams in the
-same format. The selected tab is the `#slug` in the
-address, so a tab can be bookmarked. Under it, three figures in big text with
-a small label: division place ("7th Place" / Atlantic Division), distance from
-the playoff line ("2 Points Back" / of playoff spot, or "N Points Clear" / of
-first team out), and playoff odds. Then the next game (opponent, time, arena, one TV network), then the timeline,
-newest first. There are no filters: every story and every game, preseason
-included.
+The **home page** lists each section with its unread count, shaded in the team's
+colour when there are any, and the total in the title. No `#` in the address is
+home, `#slug` a section, so sections can be bookmarked and the phone's Back button
+works. **‹ Home** goes back. On a phone, a quick sideways swipe (60px, twice as far
+across as down, under 0.7s) moves between sections.
 
-Kyle asked on 2026-10-18 for: no timing tags on stories, no filter row, no
-tagline, no trip or "then" commentary on Up next, game numbers in brackets (`[8]`; preseason blank — first `G8`, changed the same night), small
-`vs`/`at`, overtime and shootout losses grey like any loss, and one TV network
-per game. The Athletic's own teaser stays as the summary (he chose that over
-generated summaries, which would need the paywalled article text).
+A section is **Up next** (date, time, network, venue) then the timeline, newest
+first. Stories from before the first game run on at the bottom. The timeline
+starts at the game the oldest story follows, so a feed's reach sets its length.
 
-**Header figures are off (2026-10-29).** Kyle took the place / games-back /
-playoff-odds line off the team tabs "for now -- maybe will add back something
-later". `"standings": false` in config.json skips those lookups entirely
-(fewer requests, fewer ways to fail); setting it to `true` brings the header
-back exactly as it was, all the standings code is still here.
+Everything is in Detroit time, and a story is placed by the game's start time
+rather than its date, so a story at 12:30am stays with the 7pm game.
 
-## How a story finds its place
+**Games:** `[n]` numbers regular-season games; preseason is blank, postseason is
+`PO`, cup games are unnumbered and named. Records run down the page: hockey
+W-L-OT, soccer W-D-L, football W-L (a tie adds a column), others W-L. Results show
+overtime ("L SO", "W OT") and baseball's extra innings don't show. Postponed and
+cancelled games are dropped; the makeup is its own event. A past game shows no
+venue or network, and only finished games and the next one go into the page.
 
-Every story sits under the last finished game before it was filed (a line
-saying how long after was removed at Kyle's request, 2026-10-18). Nothing is written between games (gap labels like "2 days between games · 3 stories" were removed at his request). Stories filed before
-the season's first game run on at the bottom with no heading (the "Offseason
-into camp" chapter was removed at Kyle's request, as were the footer's source
-credits). Games carry the
-record as it stood after them, so the standings move down the page with the
-stories. Preseason games carry no number and change no record.
+**One network per game:** a US national broadcast (TV before streaming), else
+the team's own listing, else `localTv` in config. NHL Network, MLB.TV, MLB
+Network, NBA TV, League Pass and NFL+ don't count as national. Soccer: the first
+English channel; ESPN lists the Spanish ones beside it.
 
-**Playoff line:** each conference sends the top three of each division plus
-two wild cards. A team outside is as far back as the NEARER of its division's
-third place and the second wild card; a team inside is as far clear as it is
-above the conference's first team out. From the NHL's `standings/now`.
+## Sections
 
-**Playoff odds** come from Hockey-Reference's playoff probabilities page
-(`/friv/playoff_prob.fcgi`; the old `.cgi` address redirects). MoneyPuck asks
-not to be scraped, so it stays out. The page is fetched at most every 12 hours
-and kept in `cache/nhl-odds.json`, which CI commits. Hockey-Reference only
-starts a season once every team has played 10 games; until then it still shows
-last season with blank odds, so a value is used only when the page's points
-for the team match the NHL's. Until then the page shows "—" and "after 10
-games".
+Team sections have `league`, `team` and either `feed` or `sources`. Story-only
+sections (Soccer, Power Rankings) have neither `league` nor `team`.
 
-**Each sport, under the same rules:**
+| section | stories from | games | stories since |
+| --- | --- | --- | --- |
+| Michigan Football | The Athletic, MGoBlog | ESPN | Feb 1 |
+| Michigan Basketball | The Athletic, UMHoops, MGoBlog | ESPN | Apr 1 |
+| Michigan Hockey | MGoBlog | ESPN | Aug 1 |
+| Tottenham Hotspur | The Athletic | ESPN soccer | Jul 1 |
+| Detroit Tigers | The Athletic | ESPN | Nov 1 |
+| Detroit Lions | The Athletic | ESPN | Mar 1 |
+| Detroit Pistons, Cleveland Cavaliers | The Athletic | ESPN | Jul 1 |
+| Detroit Red Wings | The Athletic | NHL API | Jul 1 |
+| Soccer | The Athletic's USMNT and Atlanta United feeds | none | Jul 1 |
+| Power Rankings | Headlines with "power rankings" in the four Detroit feeds; "the briefing" in The Athletic's football feed | none | each league's date |
 
-| | stories kept from | gap unit | playoff line | odds |
-| --- | --- | --- | --- | --- |
-| NHL | July 1 | points | top 3 per division + 2 wild cards | Hockey-Reference |
-| NBA | July 1 | games | top 6 seeds (7-10 are only the play-in) | ESPN power index |
-| NFL | March 1 | games | 7 seeds; a division title is a ticket | ESPN power index |
-| MLB | November 1 (prior year) | games | 6 seeds; a division title is a ticket | ESPN standings `playoffPercent` |
+- **Soccer's brief (Kyle):** USMNT matches and player roundups, no single-player
+  deep dives or FIFA politics; Atlanta stories plus at most a weekly MLS roundup,
+  The Athletic's "The Verdict". The rules Sheet does this.
+- **Power Rankings** reads team feeds because league feeds hold only a week or
+  two, while every ranking mentions every team. `allRules: false` exempts it from
+  the Sheet's All rows, which hide power rankings elsewhere. Each league's unread
+  dates use its team's colour (`palette`).
+- **The Briefing** comes from the whole-football feed, as there is no Premier
+  League feed (the address 404s). That feed holds about ten days, so matches are
+  archived. The Tottenham feed is a second source for older editions.
+- **Soccer schedules** are per competition (`SOCCER_COMPS`), asked twice, because
+  fixtures need `fixture=true`. The FA Cup answers 500 until the club is in the
+  draw; that means no games.
 
-Records: hockey W-L-OT, football W-L (W-L-T once there's a tie), baseball and
-basketball W-L. Results carry overtime ("W OT", "L SO", "L 2OT"); baseball's
-extra innings are not shown. Preseason games have a blank number, postseason `PO`, neither
-numbered nor counted. Postponed and cancelled games are dropped (the makeup is
-its own event). The timeline starts at the game the oldest story follows: a
-feed reaches back only ~100 stories, so the Tigers' tab begins in June rather
-than with 70 empty gaps. ESPN's tables follow ESPN's idea of the current season
-(the NBA's shows preseason records until opening night, MLB's the finished
-season all winter), so a table whose games played disagree with the schedule's
-shows "—" for place and gap; odds still show when they are this season's.
-NFL times not yet set read "Time TBD".
+## Michigan's feeds
 
-The page opens on home unless the address names a section. On a phone, a quick sideways swipe below
-the tabs moves to the next or previous team (a stroke must travel 60px, at
-least twice as far sideways as down, within 0.7s — so scrolling never changes
-team); the tab row keeps its own sideways scroll.
+**MGoBlog** (`mgoblog.com/fbfeed`) covers every sport, has no categories and keeps
+only its newest 10 posts.
 
-**Colours:** each tab wears its team's colour, Kyle's picks (2026-10-18): Tigers
-orange, Lions blue, Pistons teal, Cavaliers gold, Red Wings red. They are CSS
-tokens in `template.html` keyed on `data-team` (the slug), light and dark:
-`--accent` fills (tab underline, game dots, win pills and bands, Up next rule),
-`--accent-text` is the same hue dark enough to read as text (unread dates, win
-game numbers — all at least 4.5:1), `--on-accent` is the text on a win pill
-(dark on orange, teal and gold). A new team needs its own block or it falls
-back to red.
+- **History:** posts are saved in `cache/archive/` (400 days). Feedly's public
+  stream API, newest 50 with full text, is merged in on each build, so missed
+  builds lose nothing. MGoBlog's robots.txt turns away AI agents, so **its pages
+  are never crawled**; posts older than the archive simply aren't here.
+- **Sorting** (`sport_of`), first match wins:
+  1. Series headlines: "Michigan Hockey", "HockeyCast", "Hoops Preview", "WBB…".
+     Basketball patterns are anchored at the start, so a mailbag that mentions
+     Hoops stays mixed. These come first because Feedly's copy of some posts
+     carries other posts' text.
+  2. People a headline names, if exactly one sport's (`load_names`): Michigan's
+     ESPN rosters and coaches, plus names from other basketball sources' personnel
+     headlines, which beat ESPN to new arrivals. A name football headlines use too
+     doesn't count. This is what places "Portal Hello: JP Estrella".
+  3. Word counts of terms only one sport uses, with a stray mention allowed.
+  Anything left, football or mixed, goes to Michigan Football.
 
-**TV:** a US national broadcast if the game has one (ESPN, ESPN+, TNT, ABC…),
-otherwise the feed's `localTv` (Detroit SportsNet). NHL Network doesn't count
-as national: its games stay on the local channel too. A game the API lists no
-broadcast for at all shows none. For ESPN sports the same idea: a national
-listing (TV before streaming) unless it is MLB.TV, MLB Network, NBA TV or NBA
-League Pass, then the team's own home/away listing (the Tigers' is
-"Tigers.TV"), then `localTv`: **TV20 Detroit** for the Pistons and **DAZN** for
-the Cavaliers, both new in 2026-27 and absent from ESPN's data. The Lions have
-none — every NFL game has a network.
+**UMHoops** comes from its WordPress REST API (`/wp-json/wp/v2/posts`). Its firewall
+refuses the build at `/feed/`; trying other clients until one passed was ruled out
+as evading bot protection. Feedly also carries it, should the API close.
 
-## Michigan Football, Basketball and Hockey (added 2026-10-19, first on home)
+**The Athletic** has no Michigan hockey feed. A college opponent is shown as its
+school alone.
 
-Kyle's sources: The Athletic's Michigan football and basketball feeds,
-MGoBlog (`mgoblog.com/fbfeed`, every sport) and UMHoops. MGoBlog posts that
-are purely basketball go to Basketball, purely hockey to Hockey (added the same
-day, under Basketball), everything else — football, podcasts, mixed — to
-Football. There is no Athletic Michigan hockey feed, so Hockey is MGoBlog only.
+## The rules Sheet
 
-- **Sorting MGoBlog**: its feed has no categories but carries each post's full
-  text, so `sport_of()` counts terms only one sport uses; a post is basketball
-  (or hockey) with some of that sport's terms (a "Hoops"/"WBB"/"Hockey"
-  headline counts double) and next to none of the others' — one stray
-  mention allowed, since hockey and basketball share "rebound" and "paint".
-  Checked on 21 posts. Women's basketball counts as basketball.
-- **MGoBlog keeps only its newest 10 posts**, about four days, so posts are
-  remembered in `cache/archive/` (one JSON per feed, sport decided once,
-  400 days kept) and every build adds what's new. **History comes from Feedly**
-  (`read_feedly`, Kyle's reader, public stream API, newest 50 with full text —
-  back to Sept 25 on 2026-10-19), merged on every build. MGoBlog's robots.txt
-  disallows AI agents (ClaudeBot, ChatGPT-User), so its article pages are NOT
-  crawled for a backfill; posts before Feedly's 50 are simply not here.
-- **Headlines sort first**: MGoBlog's series names ("Michigan Hockey Game #",
-  "Michigan HockeyCast", "Hockey Season Preview", "Hoops Preview", "WBB …")
-  decide before any word count, because Feedly's copy of some posts carries
-  other posts' text (a hockey recap read as 49 football terms). Basketball
-  headline patterns are anchored at the start, so a mailbag that "Talks …
-  Hoops, and Hockey" stays mixed.
-- **Then the people a headline names** (`load_names`, `named`): Michigan's
-  current rosters and coaches from ESPN (team 130, all three sports), plus
-  names from The Athletic's and UMHoops' basketball headlines about people
-  joining, leaving or signing — they cover new arrivals before ESPN's roster
-  does. A headline name is dropped if football headlines use it too (the
-  basketball feeds also cover Sherrone Moore and Bryce Underwood), and words
-  like teams, places and "recruiting roundup" never count. Names compare
-  without punctuation ("JP" vs ESPN's "J.P."). A headline naming people of
-  exactly one sport decides; that is what moved "Portal Hello: JP Estrella"
-  (no basketball terms in its text) from Football to Basketball. Word counts
-  come last. 61/61 test posts right.
-- **UMHoops comes from its WordPress REST API** (`/wp-json/wp/v2/posts`, up to
-  300 posts since April 1): its firewall refuses the build at `/feed/` (Python's
-  client and Windows' curl, whatever the user agent) but serves the site's own
-  public API. Trying other HTTP clients until one passed the feed's firewall
-  was ruled out as evading bot protection; the API is the site's front door.
-  Feedly's public stream API (`cloud.feedly.com/v3/streams/contents?streamId=
-  feed/https://umhoops.com/feed/`) also works — the fallback if the API ever closes.
-- **Hockey standings are counted, not fetched**: ESPN publishes none for college
-  hockey, so `hockey_standing()` reads the seven Big Ten members' schedules
-  (members from ESPN's core API, cached a week in `cache/`) and counts
-  completed regular-season games between members, conference-tournament
-  games left out by their note. Figures: place (win % with a tie as half),
-  **Big Ten record** (not games back — the league's points system weights
-  OT/shootouts and would be a guess), and **NPI rank** from the
-  ncaa-api.henrygd.me mirror the standings app uses (NPI decides NCAA bids).
-- Games: ESPN college football / men's basketball, team id 130. Place and
-  games back are Michigan's Big Ten rank and ESPN's gamesBehind (the leader
-  shows games clear of second). Football's third figure is ESPN FPI's playoff
-  (CFP) odds; basketball's is its record. ESPN shows last season's basketball
-  table until games are played, so that section shows dashes till November.
-- A college opponent is its school alone ("Penn State"): ESPN gives college
-  teams no nickname. Each story shows its source ("The Athletic", "MGoBlog").
-- Rule rows can name a source: `The Athletic` with `*` and a Michigan keep-list
-  trims The Athletic's national college pieces in both Michigan sections and
-  touches nothing else (other sections' stories carry no source label).
+The **RSS** tab of Kyle's Google Sheet (`rules` in config) decides what's hidden.
+He edits it; the next build applies it.
 
-## Tottenham, Soccer and Power Rankings (added 2026-10-19)
+| Team | Look in | Hide if it contains | Unless it contains |
+| --- | --- | --- | --- |
+| All | Headline | podcast, odds | |
+| Detroit Lions | Headline | nfl | detroit, lions |
 
-**Tottenham** works like the other team tabs, from ESPN soccer: every
-competition is asked separately (`SOCCER_COMPS` — Premier League, League Cup,
-FA Cup, the three UEFA cups), each twice, because a team schedule gives played
-games by default and fixtures only with `fixture=true`. A competition the
-club isn't in answers empty, and the FA Cup answers 500 until the club's in
-the draw — both are skipped. League games are numbered `[n]`; cup games carry
-no number and name the competition in their meta line. Results are W / D / L
-(ESPN's winner flag, so a penalty-shootout cup tie reads right), the record is
-W-D-L. The standing reads ESPN's zone notes: in the relegation places it shows
-points **from safety**, otherwise points back of (or clear of) the Champions
-League places. No one publishes odds for a league table, so the third figure
-is the W-D-L record. TV: the English channel (NBC, USA Network, Peacock,
-Paramount+), never the Spanish one ESPN lists beside it.
-
-**Soccer** and **Power Rankings** are story-only tabs (`kind: "stories"`): no
-schedule, no table, no Up next. Each story carries its source label after the
-time ("USMNT", "NFL"). Soccer reads the USMNT feed (`football/usmnt`) and Atlanta
-United's (`football/atlunited` — Kyle supplied it; guessed slugs all 404).
-Kyle's brief for it: USMNT match coverage and player roundups only, no
-single-player deep dives or FIFA politics; Atlanta stories plus at most a
-weekly MLS roundup, which is The Athletic's Sunday column "The Verdict". Power Rankings reads
-the four Detroit team feeds and keeps only headlines with "power rankings":
-the league feeds hold only a week or two of stories, but every ranking
-mentions every team, so the team feeds carry each one for months.
-`allRules: false` exempts it from the Sheet's "All" rows, which hide power
-rankings everywhere else.
-
-It also carries the Premier League's weekly **The Briefing** (labelled EPL,
-added 2026-10-20), matched by a source-level `include` of "the briefing" --
-which leaves out the "Champions League briefing". It comes from the
-whole-football feed (`/athletic/rss/football/`; there is no Premier League
-feed), which holds only ~10 days, so its matches are archived in
-cache/archive/. The Tottenham feed is a second source for Briefings that name
-Spurs, which is how the Sept 14 and 21 editions were recovered. Briefings
-before then whose headline doesn't say "The Briefing" aren't caught.
-
-## Leaving stories out: the rules Sheet
-
-The **RSS** tab of Kyle's Google Sheet (`rules` in `config.json`, link-viewable)
-says which stories to drop. Kyle edits it; the next hourly build applies it.
-
-| Team | Look in | Hide if it contains | Unless it contains | Notes |
-| --- | --- | --- | --- | --- |
-| All | Headline | NHL, MLB, NFL, NBA | | league-wide pieces |
-| Lions | Headline | odds | | |
-
-- **Team** is a tab name (Detroit Tigers, Cleveland Cavaliers, Tottenham
-  Hotspur...) or All. The short names from before the tabs were spelled out
-  (2026-10-19) still work -- Tigers, Lions, Pistons, Red Wings, Cavaliers,
-  Tottenham -- through each tab's `aka` list in config.json.
-- **Look in**: `Headline`, or `Headline or teaser` to search the one-line
-  teaser too. The Athletic's feed carries no author or section, so headline
-  and teaser are all there is.
-- **Hide if it contains**: words or phrases, comma-separated; any one hides
-  the story. Case doesn't matter and it matches inside words ("NFL" catches
-  "NFL's", but "bet" would also catch "better").
-- **Unless it contains**: optional exceptions, comma-separated — e.g. hide
-  "NHL" unless "Red Wings" keeps the league pieces that are about Detroit.
-- A row with nothing in "Hide if it contains" is ignored, so notes rows are fine.
-- **Team can be a source** on a tab built from several feeds: `USMNT` or
-  `Atlanta` on the Soccer tab, `NFL` etc. on Power Rankings.
-- **`*` in "Hide if it contains" means every story**, which turns "Unless it
-  contains" into a keep-only list. Two keep-only rows for the same source must
-  BOTH be met — the USMNT rows keep only stories naming the national team, and
-  of those only matches, squads and player roundups.
-- **A phrase can't contain a comma** — the comma splits it. "fan, explained"
-  becomes "fan" and "explained", and "fan" alone hides every headline with
-  "fans" or "fantastic" in it (found while testing, 2026-10-19).
-- Rules are separate: a story is hidden if ANY row hides it, and a row's
-  "Unless" only rescues it from that row. So "NFL unless Lions" keeps "Week 5
-  NFL power rankings: … Lions fall flat" past the league row, and the
-  "power rankings" row still hides it.
-
-The starting five rows were worked out from what siftrss had been dropping and
-reproduce it exactly (checked story by story on 2026-10-19). The header row
-must stay as it is: the build checks it, because a Sheet asked for a tab that
-isn't there answers with a different tab instead of an error. If the Sheet
-can't be read, the build uses the last good copy (`cache/rules.json`) and says
-so in its log; with no copy it stops rather than publish everything.
-
-## Hourly refresh
-
-GitHub has run this account's scheduled builds four to five hours late, or
-skipped them, since September 2026 — the night of 2026-10-18 only one of four
-three-hourly runs happened. A build started through GitHub's API runs at once,
-so **"RSS Feeds Refresh"** (`refresh-script/Code.js`, its own Apps Script
-project in Kyle's account) starts `build.yml` every hour from a time-driven
-trigger. The workflow's own cron stays as a backup.
-
-It needs a Script Property `GITHUB_TOKEN`: a fine-grained GitHub token scoped
-to `kyeill/rss-feeds` only, with **Actions: read and write** and nothing else.
-Kyle created and pasted it himself; it is not in the repo. `setup()`, run once
-from the editor, asks for permission, installs the trigger and starts one
-build. A failure throws, and Apps Script emails Kyle — that is how an expired
-token will show up: make a new token, paste it over the old value, done.
-
-It is a separate project from the read list on purpose: that one's Script
-Properties hold one entry per story read, and the token is easier to find,
-and to keep away from the public web app, on its own.
-
-### When a feed is down
-
-On 2026-10-28 The Athletic's feeds answered 504 (Gateway Timeout) for four
-hours, and every build failed (an email to Kyle each hour). Now:
-
-- A server error (5xx) is retried once after 5 seconds, like a timeout.
-- A feed that still doesn't answer is replaced by **the stories the last
-  published page had** for that tab (and that source, on a tab with several),
-  so nothing drops off the page and the build still succeeds. An archived
-  source (MGoBlog, The Briefing) already keeps its own copy.
-- Each address is asked once per build, a failure included, so a dead feed
-  isn't waited on again by the names step, Power Rankings, etc.
-- The tab's footer then says which feed "didn't load at the last update".
-  If that note stays for days, the feed's address has probably changed.
-
-Tested by a build with every Athletic address forced to 504: all eleven tabs
-kept every story.
-
-## Icon and install
-
-The mark is the page itself: a spine with one dot per team, in tab order and
-team colour, each beside a headline bar. `python icons.py` draws it (no image
-library on this PC, so it is pixel maths with 4x4 supersampling):
-
-- `icon-192.png`, `icon-512.png` — full-bleed, `purpose: any maskable`. The
-  mark stays inside the 0.4-radius safe circle, so Android launchers can cut
-  it to any shape (the "adaptive icon").
-- `icon-mono-512.png` — white on transparent, `purpose: monochrome`, for
-  Android 13+ themed icons that recolour to the wallpaper.
-- `icon-180.png` — iPhone home screen, the mark 25% larger since iOS only
-  rounds the corners.
-- The browser-tab icon is an SVG the page draws itself: one dot in the OPEN
-  tab's colour plus three bars, which is what still reads at 16px.
-
-`sw.js` caches only the shell: the page is always fetched fresh and the cached
-copy is the offline fallback. Icons are served cache-first, so if they change,
-bump `CACHE` in `sw.js`.
-
-## Look
-
-**Dark only** (Kyle, 2026-10-19) — no light palette, whatever the device is set to.
-
-**Type mirrors The Athletic** with free stand-ins, since its fonts are licensed
-to the NYT (read from its stylesheets on 2026-10-19):
-
-| The Athletic | here | used for |
-| --- | --- | --- |
-| nyt-franklin | Libre Franklin | tabs (small caps-style uppercase, like its nav), dates, labels, scores, opponents |
-| nyt-cheltenham | Source Serif 4 (600) | headlines and teasers |
-| RegularSlab | Roboto Slab | the big place / gap / odds figures, Up next opponent |
-
-On a phone the five tabs with their counts are wider than the screen in any
-font, so the tab row scrolls and fades at its right edge; the open tab scrolls
-into view and swiping changes team.
+- **Team:** a section's name, its old short name (`aka`: "Tigers", "Tottenham"),
+  All, or a source label (`MGoBlog`, `UMHoops`, `The Athletic`, `USMNT`, `Atlanta`).
+- **Look in:** `Headline`, or `Headline or teaser`. The feeds carry nothing else.
+- **Hide / Unless:** comma-separated phrases, any case, matched inside words: "nfl"
+  catches "NFL's", and "bet" would catch "better". A phrase can't contain a comma.
+- **`*`** in Hide means every story, making Unless a keep-only list. Two keep-only
+  rows for one source must both be met.
+- A story is hidden if any row hides it; a row's Unless only rescues it from that row.
+- A row with nothing in Hide is ignored, so note rows are fine.
+- The first four column headers must stay as they are: a Sheet asked for a missing
+  tab answers with another tab, not an error, so the build checks.
 
 ## Read and unread
 
-Opening a story marks it read, and the mark follows Kyle to every device. An
-unread story's date is red; once read, the date and headline turn grey, and the
-tab's count drops. A "Mark all N Red Wings stories read" link in the footer
-clears the current tab after a confirm, and hides itself at zero. (An "Unread
-only" filter existed briefly and went with the filter row.)
+Opening a story, or its ×, marks it read on every device; so does "Mark all N … stories
+read" in the footer. An unread date is in the team's colour, a read story is grey.
 
-The page is static, so the list lives in an Apps Script web app,
-"RSS Feeds Read Sync", in Kyle's Google account (`apps-script/Code.js`, one
-Script Property per story id). Its `/exec` address is `sync` in `config.json`;
-`build.py` writes it into the page. Each browser also keeps a copy in
-`localStorage`, so marks show at once and survive a dropped connection; any
-mark the server hasn't acknowledged is retried on the next load. The page
-re-reads the list on every sign it is back in front (visibilitychange,
-pageshow, focus, coming back online) and every two minutes while open —
-phones often resume a page from memory without reloading it, and Kyle saw
-marks from his computer not reaching his phone (2026-10-18) when only
-visibilitychange was used. The footer says "Read list synced 10:35 pm" with
-the time of the last successful sync.
+The page is static, so the list lives in "RSS Feeds Read Sync" (one Script Property
+per story id, `r:<id>`). Each browser keeps a copy in `localStorage` and queues
+unsent marks, and the page re-reads the list whenever it comes back to the front and
+every two minutes, because phones resume pages without reloading. Story ids are The
+Athletic's article number, or a hash of the link for other sources.
 
-Story ids are The Athletic's article number from the link (`/athletic/7699924/`),
-or a 12-character hash for any other source.
-
-Deploying a change to the script — clasp, from Claude's shell, never by hand:
+Deploy a change to the script from `apps-script/`:
 
 ```bash
-export PATH="/c/Program Files/nodejs:/c/Users/kyleh/AppData/Roaming/npm:$PATH"
 clasp push -f
-clasp create-deployment -i AKfycbw8vFkELzj4_cTKh7vrQ55az3JtItkFBx_6PoCL20EJ5HnHCfomt4u75FrOKVrSgxh_2g -d "what changed"
+clasp create-deployment -i <the id in config.json's sync address> -d "what changed"
 ```
 
-`create-deployment -i` makes a new version and repoints the existing deployment,
-so the address in `config.json` never changes. `.clasp.json` (the script id) is
-gitignored and lives only in the local folder.
+`create-deployment -i` repoints the existing deployment, so the address never
+changes. `.clasp.json` is gitignored. From `refresh-script/`, clasp 3 needs the full
+Windows path: `clasp -P "$(cygpath -w "$PWD")" push -f`.
 
-## Traps already paid for
+## Look
 
-- **`clasp create-script` overwrites `appsscript.json`** with a bare default
-  that has no `webapp` block. Pushed like that, the web app would refuse every
-  call from the page. The manifest must keep `executeAs: USER_DEPLOYING` and
-  `access: ANYONE_ANONYMOUS`.
-- **The read list's address is public** — it is in the page. Anyone who reads
-  the source could see or change which stories are marked read. Accepted: it
-  holds nothing but article numbers. The script takes only short id strings,
-  at most 1000 per call, and drops marks older than 400 days.
-- **Clearing a mark on the server alone doesn't stick.** A browser that still
-  has it locally will resend it. To unmark for good, clear that browser's
-  site data too.
+Dark only. Fonts are free stand-ins for The Athletic's: Libre Franklin (nyt-franklin:
+labels, dates, scores), Source Serif 4 (nyt-cheltenham: headlines, teasers), Roboto
+Slab (RegularSlab: section names).
 
-- **Anchor on puck drop, not the calendar date.** A 7pm game and an 8pm story
-  are the same night; by date alone a story filed at 00:30 would be stranded a
-  day away from the game it is about.
-- **Times are Detroit's, not the browser's.** The feed publishes in GMT and
-  the schedule in UTC; both are formatted through `America/Detroit` so a
-  6am column does not read as 11am.
-- **Nothing here knows what a story is about.** The tags are timing, not
-  subject: a trade-request story filed an hour after a loss is tagged *Same
-  night* like any recap.
-- **Every link is paywalled.** It is an Athletic feed; the page shows the
-  headline and dek the feed carries and links out.
+Colours are CSS tokens per `data-team` in `template.html`, and the `--accent-text`
+shade must stay readable on the dark ground. Michigan maize, Tottenham navy, Tigers
+orange, Lions blue, Pistons teal, Red Wings red, Cavaliers old gold, Soccer Atlanta's
+dark red, Power Rankings silver.
+
+**Icons** (`python icons.py`, pixel maths since this PC has no image library):
+`icon-192/512` are maskable, `icon-mono-512` is for Android themed icons, `icon-180`
+for iPhone. The browser-tab icon is an SVG the page draws in the section's colour.
+`sw.js` always fetches the page fresh and serves icons cache-first, so bump `CACHE`
+if they change.
+
+## Adding a section
+
+Add it to `config.json`, then add a `data-team` colour line to `template.html`. Team
+sections need a `league` that `season_for` and `schedule` know. The Athletic's feed
+addresses can't be guessed; Kyle supplies them.
+
+## Decisions
+
+Kyle's calls, so they don't get re-added:
+
+- **Removed:** story timing tags and the "after" line, chapters, gap labels, footer
+  credits, tagline, filter row, tab row, and notes on Up next beyond the next game.
+- **Place, games back and playoff odds** came off the team sections on 2026-10-29
+  ("maybe will add back something later"). The code was removed on 2026-10-30;
+  the last version with it is commit `aa2e43f`.
+- **Teasers** stay The Athletic's own. Better ones would need paywalled article text.
+- **Extracting the power rankings** as data was skipped: feed items hold only a
+  headline, and the articles are paywalled and off-limits (below).
+
+## Traps
+
+- **The Athletic and NYT:** every link is paywalled and nytimes.com's robots.txt
+  disallows Anthropic's agents, including Claude-User. Feeds only; no article pages.
+- **`clasp create-script` overwrites `appsscript.json`.** The manifest must keep
+  `executeAs: USER_DEPLOYING` and `access: ANYONE_ANONYMOUS`, or the page's calls fail.
+- **The read list's address is public** (it is in the page). Accepted: it holds only
+  article numbers, takes short ids, at most 1000 per call, and forgets after 400 days.
+- **Clearing a mark on the server alone doesn't stick:** a browser that has it resends it.
+- **Testing the ×:** a click in a local preview marks a real story read through the
+  live read list. Stub `window.fetch` first, then clear `rssf:read`/`rssf:pending`.
+- **Merging builds:** CI commits `docs` and `cache` hourly, so rebases conflict there.
+  Take either side, rerun `python build.py`, and confirm no `<<<<<<<` remains before
+  adding; a conflicted `docs/index.html` once crashed CI.
