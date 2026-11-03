@@ -138,6 +138,15 @@
   "team": "UMHoops",
   "teaser": false,
   "hide": [
+   "after",
+   "at the buzzer"
+  ],
+  "unless": []
+ },
+ {
+  "team": "UMHoops",
+  "teaser": false,
+  "hide": [
    "ask me anything",
    "film room",
    "photo gallery",
