@@ -256,5 +256,13 @@
    "united states",
    "usmnt"
   ]
+ },
+ {
+  "team": "Power Rankings",
+  "teaser": false,
+  "hide": [
+   "you decide"
+  ],
+  "unless": []
  }
 ]
