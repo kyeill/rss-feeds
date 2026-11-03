@@ -305,10 +305,10 @@ function tabs(){
       return '<a class="team-row'+(n ? ' fresh' : '')+'" data-team="'+esc(t.feed.slug)+'" href="#'+esc(t.feed.slug)+'"><span class="name">'+esc(t.feed.short)+'</span>'+
         (n ? '<span class="count">'+n+' unread</span>' : '<span class="done">All read</span>')+'</a>';
     }).join('');
-    // a story in two tabs (a Briefing that names Spurs) counts once
-    var all = new Set();
-    TEAMS.forEach(function(t){ unread(t).forEach(function(id){ all.add(id); }); });
-    document.querySelector('.home-title').innerHTML = 'RSS Feeds'+(all.size ? ' <span>('+all.size+')</span>' : '');
+    // the total is the sum of the counts listed below it, so the two always agree
+    // (a story in two tabs, like a Pistons-Cavaliers game story, counts in each)
+    var total = TEAMS.reduce(function(s, t){ return s + unread(t).length; }, 0);
+    document.querySelector('.home-title').innerHTML = 'RSS Feeds'+(total ? ' <span>('+total+')</span>' : '');
     btn.hidden = true;
     return;
   }
