@@ -195,7 +195,7 @@
   "team": "Detroit Lions",
   "teaser": false,
   "hide": [
-   "staff picks"
+   "picks"
   ],
   "unless": []
  },
