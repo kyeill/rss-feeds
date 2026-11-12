@@ -43,11 +43,13 @@ how an expired token shows up: make a new one and paste it over the old value.
 | a feed still down | the last published page's stories stand in, and the section's footer says "didn't load at the last update". If that lasts for days, the feed's address has probably changed |
 | an archived source down | its archive stands in |
 | the rules Sheet unreadable | `cache/rules.json` is used; with no copy the build stops rather than publish unfiltered |
-| a schedule unreadable | the build fails, and the live page stays as it was |
+| a schedule unreadable | the last published page's games stand in, and the footer says "The schedule didn't load at the last update". With no earlier games, the build fails and the live page stays as it was |
 
 Each address is asked once per build, a failure included. The outage handling
-was tested with every Athletic address forced to 504: all sections kept every
-story.
+was tested with every Athletic address forced to 504 (all sections kept every
+story) and with Michigan Hockey's ESPN schedule forced to 500 (every section's
+games unchanged). ESPN's hockey schedule did answer 500 to GitHub for hours on
+2026-11-11, while answering normally elsewhere.
 
 ## The page
 

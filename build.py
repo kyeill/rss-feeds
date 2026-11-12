@@ -330,23 +330,28 @@ PREVIOUS = {}
 STALE = {}      # slug -> labels of feeds that didn't load this run
 
 
-def previous(slug, label=None):
-    """The stories the last published page had for this tab (from one source,
-    if a label is given): what a feed that is down this hour is replaced with.
-    The Athletic's feeds answered 504 for four hours on 2026-10-28, which
-    stopped every build -- and a section with several sources would otherwise
-    have gone out missing that source's stories. They were already through
-    the Sheet's rules, which run over them again anyway."""
+def last_page(slug):
+    """This section as the last published page had it: what stands in for a
+    feed or schedule that is down this hour."""
     if not PREVIOUS:
         PREVIOUS[None] = {}
         try:
             page = (HERE / "docs" / "index.html").read_text(encoding="utf-8")
             raw = re.search(r'<script type="application/json" id="data">(.*?)</script>', page, re.S).group(1)
             data = json.loads(raw)          # the page escapes </ as <\/, which JSON reads as </
-            PREVIOUS[None] = {f["slug"]: f.get("articles", []) for f in data["feeds"]}
+            PREVIOUS[None] = {f["slug"]: f for f in data["feeds"]}
         except Exception as err:
             print(f"  ! last page unreadable ({err}); nothing to fall back on")
-    arts = PREVIOUS[None].get(slug, [])
+    return PREVIOUS[None].get(slug, {})
+
+
+def previous(slug, label=None):
+    """The last page's stories for this section (from one source, if a label
+    is given). The Athletic's feeds answered 504 for four hours on 2026-10-28,
+    which stopped every build -- and a section with several sources would
+    otherwise have gone out missing that source's stories. They were already
+    through the Sheet's rules, which run over them again anyway."""
+    arts = last_page(slug).get("articles", [])
     return [dict(a) for a in arts if label is None or a.get("src") == label]
 
 
@@ -724,9 +729,19 @@ def main():
     for feed in CONFIG["feeds"]:
         articles = gather(feed)
         kept = sorted((a for a in articles if not hidden(a, feed, rules)), key=lambda a: a["iso"])
-        games = schedule(feed)
+        try:
+            games, stale_games = schedule(feed), False
+        except Exception as err:
+            # ESPN's Michigan Hockey schedule answered 500 for hours on 2026-11-11,
+            # failing every build (and emailing Kyle): the last page's games stand
+            # in. With no earlier games to show, the build still stops.
+            games, stale_games = last_page(feed["slug"]).get("games", []), True
+            if not games:
+                raise
+            print(f"  ! {feed['short']} schedule unreadable ({err}); {len(games)} games kept from the last page")
         feeds.append({"slug": feed["slug"], "short": feed["short"], "league": feed.get("league"),
-                      "articles": kept, "games": on_page(games), "stale": sorted(STALE.get(feed["slug"], []))})
+                      "articles": kept, "games": on_page(games), "stale": sorted(STALE.get(feed["slug"], [])),
+                      "staleGames": stale_games})
         played = len([g for g in games if g["ds"] is not None and g["type"] == 2])
         print(f"{feed['short']}: {len(kept)} stories ({len(articles) - len(kept)} hidden by rules), "
               f"{played} of {len([g for g in games if g['type'] == 2])} games played")
