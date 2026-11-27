@@ -81,7 +81,7 @@ English channel; ESPN lists the Spanish ones beside it.
 ## Sections
 
 Team sections have `league`, `team` and either `feed` or `sources`. Story-only
-sections (Soccer, Power Rankings) have neither `league` nor `team`.
+sections (Soccer, National) have neither `league` nor `team`.
 
 | section | stories from | games | stories since |
 | --- | --- | --- | --- |
@@ -94,15 +94,24 @@ sections (Soccer, Power Rankings) have neither `league` nor `team`.
 | Detroit Pistons, Cleveland Cavaliers | The Athletic | ESPN | Jul 1 |
 | Detroit Red Wings | The Athletic | NHL API | Jul 1 |
 | Soccer | The Athletic's USMNT and Atlanta United feeds | none | Jul 1 |
-| Power Rankings | Headlines with "power rankings" in the four Detroit feeds; "the briefing" in The Athletic's football feed | none | each league's date |
+| National | Headlines with "power rankings" in the four Detroit feeds; "the briefing" in The Athletic's football feed; Bill Connelly's ESPN college football stories | none | each league's date |
 
 - **Soccer's brief (Kyle):** USMNT matches and player roundups, no single-player
   deep dives or FIFA politics; Atlanta stories plus at most a weekly MLS roundup,
   The Athletic's "The Verdict". The rules Sheet does this.
-- **Power Rankings** reads team feeds because league feeds hold only a week or
-  two, while every ranking mentions every team. `allRules: false` exempts it from
+- **National** was Power Rankings until 2026-11-27 (`aka` keeps the Sheet's old
+  rows working, and `#rankings` still opens it). Its rankings come from team feeds
+  because league feeds hold only a week or two, while every ranking mentions every
+  team. `allRules: false` exempts it from
   the Sheet's All rows, which hide power rankings elsewhere. Each league's unread
   dates use its team's colour (`palette`).
+- **Bill Connelly** has no feed of his own. ESPN's college football news list
+  (`site.api.espn.com/.../college-football/news`, the API the schedules come from)
+  names each story's byline, so a `type: espn` source keeps the ones whose `byline`
+  matches. The list holds only the newest 50 stories, about two days, so it is
+  archived. www.espn.com's robots.txt turns away AI agents, so his contributor page
+  isn't read: stories from before 2026-11-27 aren't here. He also writes on soccer
+  now and then, which this list doesn't carry.
 - **The Briefing** comes from the whole-football feed, as there is no Premier
   League feed (the address 404s). That feed holds about ten days, so matches are
   archived. The Tottenham feed is a second source for older editions.
@@ -191,7 +200,7 @@ Slab (RegularSlab: section names).
 Colours are CSS tokens per `data-team` in `template.html`, and the `--accent-text`
 shade must stay readable on the dark ground. Michigan maize, Tottenham navy, Tigers
 orange, Lions blue, Pistons teal, Red Wings red, Cavaliers old gold, Soccer Atlanta's
-dark red, Power Rankings silver.
+dark red, National silver.
 
 **Icons** (`python icons.py`, pixel maths since this PC has no image library):
 `icon-192/512` are maskable, `icon-mono-512` is for Android themed icons, `icon-180`

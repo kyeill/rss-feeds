@@ -137,6 +137,30 @@ def read_wordpress(site, since):
     return items
 
 
+def read_espn(url, byline, since):
+    """One writer's stories from an ESPN news list (site.api.espn.com, the API
+    the schedules come from). ESPN has no feed per writer, but each article in
+    the list carries its byline, so the list is read and only stories whose
+    byline names the writer are kept ("Bill Connelly", "X and Bill Connelly").
+    The list holds only the newest 50 stories, about two days, so a source
+    using this needs `archive`. www.espn.com's robots.txt turns away AI agents,
+    so the writer's contributor page is not read for older stories."""
+    items = []
+    for a in json.loads(fetch(url)).get("articles", []):
+        link = ((a.get("links") or {}).get("web") or {}).get("href")
+        if byline.lower() not in (a.get("byline") or "").lower() or not link:
+            continue
+        when = dt.datetime.fromisoformat(a["published"].replace("Z", "+00:00")).astimezone(dt.timezone.utc)
+        if when.date().isoformat() < since:
+            continue
+        title = plain(a.get("headline") or "")
+        items.append({"id": f"espn-{a['id']}", "title": title,
+                      "dek": teaser(title, plain(a.get("description") or "")),
+                      "link": link, "iso": when.isoformat(), "_text": ""})
+    items.sort(key=lambda a: a["iso"])
+    return items
+
+
 def read_feedly(feed_url):
     """The newest 50 posts Feedly holds for a feed, from its public stream API.
 
@@ -356,7 +380,11 @@ def previous(slug, label=None):
 
 
 def read_source(src, since):
-    return read_wordpress(src["feed"], since) if src.get("type") == "wordpress" else read_feed(src["feed"], since)
+    if src.get("type") == "wordpress":
+        return read_wordpress(src["feed"], since)
+    if src.get("type") == "espn":
+        return read_espn(src["feed"], src["byline"], since)
+    return read_feed(src["feed"], since)
 
 
 def gather(feed):
