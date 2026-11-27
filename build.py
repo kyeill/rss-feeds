@@ -137,6 +137,33 @@ def read_wordpress(site, since):
     return items
 
 
+def read_espn(urls, byline, since):
+    """One writer's stories from ESPN news lists (site.api.espn.com, the API
+    the schedules come from). ESPN has no feed per writer, and its lists can't
+    be filtered by one, but each article carries its byline, so the lists are
+    read and only stories whose byline names the writer are kept ("Bill
+    Connelly", "X and Bill Connelly"). A story in two lists is kept once.
+    Each list holds only its newest 50 stories -- a day or two for a busy one
+    -- so a source using this needs `archive`. www.espn.com's robots.txt turns
+    away AI agents, so the writer's contributor page is not read for older
+    stories."""
+    items, seen = [], set()
+    for a in (a for url in urls for a in json.loads(fetch(url)).get("articles", [])):
+        link = ((a.get("links") or {}).get("web") or {}).get("href")
+        if byline.lower() not in (a.get("byline") or "").lower() or not link or a["id"] in seen:
+            continue
+        seen.add(a["id"])
+        when = dt.datetime.fromisoformat(a["published"].replace("Z", "+00:00")).astimezone(dt.timezone.utc)
+        if when.date().isoformat() < since:
+            continue
+        title = plain(a.get("headline") or "")
+        items.append({"id": f"espn-{a['id']}", "title": title,
+                      "dek": teaser(title, plain(a.get("description") or "")),
+                      "link": link, "iso": when.isoformat(), "_text": ""})
+    items.sort(key=lambda a: a["iso"])
+    return items
+
+
 def read_feedly(feed_url):
     """The newest 50 posts Feedly holds for a feed, from its public stream API.
 
@@ -356,7 +383,11 @@ def previous(slug, label=None):
 
 
 def read_source(src, since):
-    return read_wordpress(src["feed"], since) if src.get("type") == "wordpress" else read_feed(src["feed"], since)
+    if src.get("type") == "wordpress":
+        return read_wordpress(src["feed"], since)
+    if src.get("type") == "espn":
+        return read_espn([src["feed"], *src.get("more", [])], src["byline"], since)
+    return read_feed(src["feed"], since)
 
 
 def gather(feed):

@@ -138,41 +138,67 @@
           "label": "Atlanta",
           "league": "epl",
           "feed": "https://www.nytimes.com/athletic/rss/football/atlunited/"
+        },
+        {
+          "label": "Bill Connelly",
+          "league": "epl",
+          "type": "espn",
+          "feed": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50",
+          "more": [
+            "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=50",
+            "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?limit=50",
+            "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=50",
+            "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50"
+          ],
+          "byline": "Bill Connelly",
+          "archive": true
         }
       ]
     },
     {
-      "slug": "rankings",
-      "short": "Power Rankings",
+      "slug": "national",
+      "short": "National",
+      "aka": [
+        "Power Rankings"
+      ],
       "kind": "stories",
       "allRules": false,
-      "include": [
-        "power rankings"
-      ],
       "sources": [
         {
           "label": "MLB",
           "league": "mlb",
           "feed": "https://www.nytimes.com/athletic/rss/mlb/tigers/",
-          "palette": "tigers"
+          "palette": "tigers",
+          "include": [
+            "power rankings"
+          ]
         },
         {
           "label": "NFL",
           "league": "nfl",
           "feed": "https://www.nytimes.com/athletic/rss/nfl/lions/",
-          "palette": "lions"
+          "palette": "lions",
+          "include": [
+            "power rankings"
+          ]
         },
         {
           "label": "NBA",
           "league": "nba",
           "feed": "https://www.nytimes.com/athletic/rss/nba/pistons/",
-          "palette": "pistons"
+          "palette": "pistons",
+          "include": [
+            "power rankings"
+          ]
         },
         {
           "label": "NHL",
           "league": "nhl",
           "feed": "https://www.nytimes.com/athletic/rss/nhl/redwings/",
-          "palette": "redwings"
+          "palette": "redwings",
+          "include": [
+            "power rankings"
+          ]
         },
         {
           "label": "EPL",
@@ -192,6 +218,14 @@
             "the briefing"
           ],
           "palette": "tottenham"
+        },
+        {
+          "label": "Bill Connelly",
+          "league": "cfb",
+          "type": "espn",
+          "feed": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/news?limit=50",
+          "byline": "Bill Connelly",
+          "archive": true
         }
       ]
     }
