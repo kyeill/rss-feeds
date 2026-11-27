@@ -137,19 +137,22 @@ def read_wordpress(site, since):
     return items
 
 
-def read_espn(url, byline, since):
-    """One writer's stories from an ESPN news list (site.api.espn.com, the API
-    the schedules come from). ESPN has no feed per writer, but each article in
-    the list carries its byline, so the list is read and only stories whose
-    byline names the writer are kept ("Bill Connelly", "X and Bill Connelly").
-    The list holds only the newest 50 stories, about two days, so a source
-    using this needs `archive`. www.espn.com's robots.txt turns away AI agents,
-    so the writer's contributor page is not read for older stories."""
-    items = []
-    for a in json.loads(fetch(url)).get("articles", []):
+def read_espn(urls, byline, since):
+    """One writer's stories from ESPN news lists (site.api.espn.com, the API
+    the schedules come from). ESPN has no feed per writer, and its lists can't
+    be filtered by one, but each article carries its byline, so the lists are
+    read and only stories whose byline names the writer are kept ("Bill
+    Connelly", "X and Bill Connelly"). A story in two lists is kept once.
+    Each list holds only its newest 50 stories -- a day or two for a busy one
+    -- so a source using this needs `archive`. www.espn.com's robots.txt turns
+    away AI agents, so the writer's contributor page is not read for older
+    stories."""
+    items, seen = [], set()
+    for a in (a for url in urls for a in json.loads(fetch(url)).get("articles", [])):
         link = ((a.get("links") or {}).get("web") or {}).get("href")
-        if byline.lower() not in (a.get("byline") or "").lower() or not link:
+        if byline.lower() not in (a.get("byline") or "").lower() or not link or a["id"] in seen:
             continue
+        seen.add(a["id"])
         when = dt.datetime.fromisoformat(a["published"].replace("Z", "+00:00")).astimezone(dt.timezone.utc)
         if when.date().isoformat() < since:
             continue
@@ -383,7 +386,7 @@ def read_source(src, since):
     if src.get("type") == "wordpress":
         return read_wordpress(src["feed"], since)
     if src.get("type") == "espn":
-        return read_espn(src["feed"], src["byline"], since)
+        return read_espn([src["feed"], *src.get("more", [])], src["byline"], since)
     return read_feed(src["feed"], since)
 
 

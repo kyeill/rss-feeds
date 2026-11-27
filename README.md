@@ -93,7 +93,7 @@ sections (Soccer, National) have neither `league` nor `team`.
 | Detroit Lions | The Athletic | ESPN | Mar 1 |
 | Detroit Pistons, Cleveland Cavaliers | The Athletic | ESPN | Jul 1 |
 | Detroit Red Wings | The Athletic | NHL API | Jul 1 |
-| Soccer | The Athletic's USMNT and Atlanta United feeds | none | Jul 1 |
+| Soccer | The Athletic's USMNT and Atlanta United feeds; Bill Connelly's ESPN soccer stories | none | Jul 1 |
 | National | Headlines with "power rankings" in the four Detroit feeds; "the briefing" in The Athletic's football feed; Bill Connelly's ESPN college football stories | none | each league's date |
 
 - **Soccer's brief (Kyle):** USMNT matches and player roundups, no single-player
@@ -105,13 +105,15 @@ sections (Soccer, National) have neither `league` nor `team`.
   team. `allRules: false` exempts it from
   the Sheet's All rows, which hide power rankings elsewhere. Each league's unread
   dates use its team's colour (`palette`).
-- **Bill Connelly** has no feed of his own. ESPN's college football news list
-  (`site.api.espn.com/.../college-football/news`, the API the schedules come from)
-  names each story's byline, so a `type: espn` source keeps the ones whose `byline`
-  matches. The list holds only the newest 50 stories, about two days, so it is
-  archived. www.espn.com's robots.txt turns away AI agents, so his contributor page
-  isn't read: stories from before 2026-11-27 aren't here. He also writes on soccer
-  now and then, which this list doesn't carry.
+- **Bill Connelly** has no feed of his own, and ESPN's news lists
+  (`site.api.espn.com/.../news`, the API the schedules come from) can't be filtered
+  by writer. But each story names its byline, so a `type: espn` source reads lists
+  and keeps the ones whose `byline` matches: college football into National, soccer
+  into Soccer. Each list holds its newest 50 stories, so both are archived. Soccer
+  reads the all-soccer list (about a day, nearly every story) plus `more`: the
+  Champions League, Premier League, MLS and World Cup lists, which reach back days
+  to weeks. www.espn.com's robots.txt turns away AI agents, so his contributor page
+  isn't read: stories from before 2026-11-27 aren't here.
 - **The Briefing** comes from the whole-football feed, as there is no Premier
   League feed (the address 404s). That feed holds about ten days, so matches are
   archived. The Tottenham feed is a second source for older editions.
